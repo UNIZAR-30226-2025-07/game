@@ -1,0 +1,20 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "source": "src/index.html",
+  "repository": "https://github.com/UNIZAR-30226-2025-07/game",
+  "author": "hugocornago <hugo@zuperito.xyz>, et al.",
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build",
+    "watch": "parcel watch src/index.html"
+  },
+  "devDependencies": {
+    "@types/p5": "^1.7.6",
+    "parcel": "^2.13.3"
+  },
+  "dependencies": {
+    "p5": "^1.11.3"
+  }
+}

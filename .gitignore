@@ -1,2 +1,13 @@
+# Env
 .envrc
+
+# Locks
 flake.lock
+yarn.lock
+
+# Node
+node_modules/
+
+# Build Artefacts
+dist/
+.parcel-cache/
