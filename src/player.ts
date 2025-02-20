@@ -12,4 +12,15 @@ export default class Player extends Circle {
   eat(otherCircle: Circle) {
     this.radius += otherCircle.radius;
   }
+
+  // Esta función mueve el el circulo del jugador en la dirección en la que se encuentra el ratón.
+  // Renta como hemos dicho el mover para cada jugador el tablero en posición contraria a la que se encuentra 
+  // el ratón, es decir si nos movemos en positivo en X y en Y, ovemos el tablero en -X y en -Y.  
+  move(){
+
+    var mouse = this.p5.createVector(this.p5.mouseX, this.p5.mouseY); 
+    mouse.sub(this.position);
+    mouse.setMag(5);
+    this.position.add(mouse);
+  }
 }

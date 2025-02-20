@@ -44,6 +44,8 @@ const sketch = (p5: P5) => {
   // The sketch draw method
   p5.draw = () => {
     buffer.forEach(circle => circle.draw());
+    // p5.translate( -Blob.pos.x, -Blob.pos.y);
+    // En la anterior lo de dentro del parentesis hay que mirar con exactitud a que se referencia 
   };
 
   p5.windowResized = () => {
