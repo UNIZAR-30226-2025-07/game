@@ -4,13 +4,13 @@ export default class Circle {
 	p5: P5;
 	position: P5.Vector;
 	radius: number;
-  color: string;
+	color: string;
 
 	constructor(p5: P5, position: P5.Vector, radius: number, color: string) {
 		this.p5 = p5;
 		this.position = position;
 		this.radius = radius;
-    this.color = color;
+		this.color = color;
 	}
 
 	draw() {

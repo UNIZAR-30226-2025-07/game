@@ -13,22 +13,22 @@ function randomVector(maxX: number, maxY: number): P5.Vector {
 
 function randomColor(): string {
   const colors = ["blue", "red", "yellow", "green"];
-  return colors[Math.floor(Math.random()*colors.length)]
+  return colors[Math.floor(Math.random() * colors.length)]
 }
 
 // Creating the sketch itself
 const sketch = (p5: P5) => {
-	// DEMO: Prepare an array of MyCircle instances
-	const buffer: Circle[] = [];
+  // DEMO: Prepare an array of MyCircle instances
+  const buffer: Circle[] = [];
 
-	// The sketch setup method 
-	p5.setup = () => {
-		// Creating and positioning the canvas
-		const canvas = p5.createCanvas(p5.windowWidth, p5.windowHeight);
-		canvas.parent("app");
+  // The sketch setup method 
+  p5.setup = () => {
+    // Creating and positioning the canvas
+    const canvas = p5.createCanvas(p5.windowWidth, p5.windowHeight);
+    canvas.parent("app");
 
-		// Configuring the canvas
-		p5.background("black");
+    // Configuring the canvas
+    p5.background("black");
 
     const player = new Player(p5, "white");
 
@@ -39,17 +39,17 @@ const sketch = (p5: P5) => {
     }
 
     buffer.push(player);
-	};
+  };
 
-	// The sketch draw method
-	p5.draw = () => {
-		buffer.forEach(circle => circle.draw());
-	};
+  // The sketch draw method
+  p5.draw = () => {
+    buffer.forEach(circle => circle.draw());
+  };
 
   p5.windowResized = () => {
     p5.resizeCanvas(p5.windowWidth, p5.windowHeight)
     p5.background("black");
-		buffer.forEach(circle => circle.draw());
+    buffer.forEach(circle => circle.draw());
   }
 };
 
