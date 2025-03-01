@@ -1,6 +1,6 @@
 import { Graphics } from "pixi.js";
 
-export const FOOD_RADIUS = 10;
+export const FOOD_RADIUS = 20;
 
 export enum FoodColor {
   Red = 0xff0000,
