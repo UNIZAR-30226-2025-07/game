@@ -54,15 +54,20 @@ export class Player extends Graphics {
 
   public canEatFood(food: Food) {
     if (food.destroyed) return false;
-    const bounds1 = this.getBounds();
-    const bounds2 = food.getBounds();
 
-    return (
-      bounds1.x < bounds2.x + bounds2.width &&
-      bounds1.x + bounds1.width > bounds2.x &&
-      bounds1.y < bounds2.y + bounds2.height &&
-      bounds1.y + bounds1.height > bounds2.y
-    );
+    const playerCenterX = this.pos.x;
+    const playerCenterY = this.pos.y;
+    const foodCenterX = food.pos.x;
+    const foodCenterY = food.pos.y;
+
+    const dx = foodCenterX - playerCenterX;
+    const dy = foodCenterY - playerCenterY;
+
+    // Compare squared distances
+    const distanceSquared = dx * dx + dy * dy;
+    const radiusSquared = this.radius * this.radius;
+
+    return distanceSquared <= radiusSquared;
   }
 
   // TODO: optimize me

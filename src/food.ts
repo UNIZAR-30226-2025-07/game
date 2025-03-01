@@ -11,10 +11,15 @@ export enum FoodColor {
 const FOOD_COLORS = [FoodColor.Red, FoodColor.Blue, FoodColor.Yellow];
 
 export class Food extends Graphics {
+  public pos: {
+    x: number,
+    y: number
+  };
   constructor(x: number, y: number, color: FoodColor) {
     super()
     this.circle(x, y, FOOD_RADIUS);
     this.fill(color);
+    this.pos = {x, y};
   }
 }
 
