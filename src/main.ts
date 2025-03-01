@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Point } from "pixi.js";
+import { Application, Container, Graphics, Point, RenderLayer } from "pixi.js";
 import './style.css'
 import { Player } from "./player";
 import { generateRandomFood } from "./food";
@@ -32,6 +32,7 @@ import { generateRandomFood } from "./food";
   const randomX = Math.floor(Math.random() * worldDimensions.width)
   const randomY = Math.floor(Math.random() * worldDimensions.height)
   const player = new Player(worldDimensions, randomX, randomY, 80, 0x44bb44);
+  player.zIndex = 2;
   world.addChild(player);
 
   /// FOOD
