@@ -3,6 +3,7 @@ import {
   Rectangle,
 } from 'pixi.js';
 import { Food, FOOD_RADIUS } from './food';
+import { Bot } from './bot'
 
 
 // El servidor nos va a dar una posición relativa al mapa. (200, 300)
@@ -59,6 +60,31 @@ export class Player extends Graphics {
     const playerCenterY = this.pos.y;
     const foodCenterX = food.pos.x;
     const foodCenterY = food.pos.y;
+
+    const dx = foodCenterX - playerCenterX;
+    const dy = foodCenterY - playerCenterY;
+
+    // Compare squared distances
+    const distanceSquared = dx * dx + dy * dy;
+    const radiusSquared = this.radius * this.radius;
+
+    return distanceSquared <= radiusSquared;
+  }
+
+  public eatBot(botEaten: Bot){
+    // increase surface not radius
+    this.radius = Math.sqrt(this.radius * this.radius + botEaten.radius * botEaten.radius) * 1.002;
+    botEaten.destroy();
+    this.draw();
+  }
+
+  public canEatBot(bot: Bot){
+    if (bot.destroyed) return false;
+
+    const playerCenterX = this.pos.x;
+    const playerCenterY = this.pos.y;
+    const foodCenterX = bot.pos.x;
+    const foodCenterY = bot.pos.y;
 
     const dx = foodCenterX - playerCenterX;
     const dy = foodCenterY - playerCenterY;
