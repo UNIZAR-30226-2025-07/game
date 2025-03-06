@@ -1,7 +1,8 @@
-import { Application, Container, Graphics, Point, RenderLayer } from "pixi.js";
+import { Application, Container, Graphics/*, Point, RenderLayer */} from "pixi.js";
 import './style.css'
 import { Player } from "./player";
 import { generateRandomFood } from "./food";
+import { Bot } from "./bot"
 
 (async () => {
   const app = new Application({
@@ -39,6 +40,19 @@ import { generateRandomFood } from "./food";
   const food = generateRandomFood(800, world.width, world.height);
   food.forEach(f => world.addChild(f));
 
+  /// BOTS
+  const bots: Bot[] = [];
+  for(let i=0; i<5; i++){
+    const botX = Math.floor(Math.random() * worldDimensions.width);
+    const botY = Math.floor(Math.random() * worldDimensions.height);
+    const botRadius = Math.floor(Math.random() * 40) + 40;
+    const botColor = Math.random() * 0xffffff;
+    const bot = new Bot(worldDimensions, botX, botY, botRadius, botColor);
+    bots.push(bot);
+    world.addChild(bot);
+  }
+
+
   app.ticker.add(() => {
     // Move the player towards the mouse
     const pointer = app.renderer.events.pointer;
@@ -68,6 +82,53 @@ import { generateRandomFood } from "./food";
       if (player.canEatFood(f)) {
         player.eatFood(f);
       }
-    })
-  })
+    });
+
+    // Comprobar si el jugador puede comer bot
+    bots.forEach(b => {
+      if (player.canEatBot(b)){
+        player.eatBot(b);
+      }
+    });
+
+    bots.forEach(bot => {
+      // Comprobar si el bot puede comer food
+      if (!bot.destroyed) {
+        food.forEach(f => {
+          if (bot.canEatFood(f)){
+            bot.eatFood(f);
+          }
+        });
+
+        bots.forEach(otherBot => {
+          // Comprobar si no es sí mismo
+          if (bot !== otherBot){
+            // Comprobar si puede comer otro bot
+            if (bot.canEatBot(otherBot)) {
+              bot.eatBot(otherBot);
+            }
+          }
+        });
+
+        // Comprobar si puede comer jugador
+        if (bot.canEatPlayer(player)){
+          bot.eatPlayer(player);
+        }        
+
+
+        // Buscar objetivo para el bot. Si hay objetivo, va hacia él
+        // Si no, movimiento aleatorio
+        let target = bot.findTarget(food, bots, [player],);
+        if (target !== null) {
+          bot.moveTowards(app.screen, target.x, target.y);
+        }
+        else{
+          let x = Math.floor(Math.random() * worldDimensions.width);
+          let y = Math.floor(Math.random() * worldDimensions.height);
+          bot.moveTowards(app.screen, x, y);
+        }
+      }
+    });
+  });
+
 })();
