@@ -11,7 +11,7 @@ import { Player } from "./player";
  * posición x e y y worldBounds
 */
 export class Bot extends Graphics {
-    private velocityMagnitude = 5;
+    private velocityMagnitude = 10;
     public radius: number;
     private color: number;
     public pos: {
@@ -174,7 +174,7 @@ export class Bot extends Graphics {
     
         const maxDistance = this.calculateMaxDistance(screen); 
         const normalizedDistance = Math.min((delta / maxDistance) * 2, 1);  // Normaliza la distancia
-        const velocity = normalizedDistance * this.velocityMagnitude;  // Calcula la velocidad
+        const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);  // Calcula la velocidad
     
         // Si la distancia es suficiente, mueve el bot hacia el objetivo
         if (delta > 3) {

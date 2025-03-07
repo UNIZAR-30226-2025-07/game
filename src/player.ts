@@ -10,7 +10,7 @@ import { Bot } from './bot'
 // Esto lo convertiremos a (0, 0).
 
 export class Player extends Graphics {
-  private velocityMagnitude = 5;
+  private velocityMagnitude = 10;
   public baseRadius;
   public radius: number;
   private color: number;
@@ -111,7 +111,7 @@ export class Player extends Graphics {
 
     const maxDistance = this.calculateMaxDistance(screen);
     const normalizedDistance = Math.min((delta / maxDistance) * 2, 1);
-    const velocity = normalizedDistance * this.velocityMagnitude;
+    const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);
 
     // Don't move if the distance is minimal
     if (delta > 3) {
