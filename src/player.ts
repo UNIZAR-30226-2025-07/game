@@ -31,6 +31,7 @@ export class Player extends Graphics {
   }
 
   private draw() {
+    if (this.destroyed) return;
     this.clear();
     this.circle(this.pos.x, this.pos.y, this.radius);
     this.fill(this.color);
@@ -41,12 +42,14 @@ export class Player extends Graphics {
   }
 
   public eatPlayer(playerEaten: Player) {
+    if (this.destroyed) return;
     this.radius = Math.sqrt(this.radius * this.radius + playerEaten.radius * playerEaten.radius);
-    playerEaten.destroy();
+    playerEaten.destroy({context: false});
     this.draw();
   }
 
   public eatFood(foodEaten: Food) {
+    if (this.destroyed) return;
     // increase surface not radius
     this.radius = Math.sqrt(this.radius * this.radius + FOOD_RADIUS * FOOD_RADIUS) * 1.002;
     foodEaten.destroy();
@@ -54,6 +57,7 @@ export class Player extends Graphics {
   }
 
   public canEatFood(food: Food) {
+    if (this.destroyed) return false;
     if (food.destroyed) return false;
 
     const playerCenterX = this.pos.x;
@@ -72,6 +76,7 @@ export class Player extends Graphics {
   }
 
   public eatBot(botEaten: Bot){
+    if (this.destroyed) return;
     // increase surface not radius
     this.radius = Math.sqrt(this.radius * this.radius + botEaten.radius * botEaten.radius) * 1.002;
     botEaten.destroy();
@@ -79,6 +84,7 @@ export class Player extends Graphics {
   }
 
   public canEatBot(bot: Bot){
+    if (this.destroyed) return false;
     if (bot.destroyed) return false;
 
     const playerCenterX = this.pos.x;
@@ -105,6 +111,7 @@ export class Player extends Graphics {
   }
 
   public moveTowards(screen: Rectangle, x: number, y: number) {
+    if (this.destroyed) return;
     const dx = x - screen.width / 2;
     const dy = y - screen.height / 2;
     const delta = Math.sqrt(dx * dx + dy * dy);

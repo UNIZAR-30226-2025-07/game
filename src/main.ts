@@ -76,6 +76,9 @@ import { Bot } from "./bot"
   });
 
   app.ticker.add(() => {
+    if (player.destroyed) {
+      window.location.replace("/")
+    }
     // Colission handeling
     // For now, check every food object and if anyone is on top of the player, eat it.
     food.forEach(f => {
