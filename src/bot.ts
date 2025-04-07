@@ -51,7 +51,7 @@ export class Bot extends Graphics {
     // Al comerse un jugador reajusta el radio
     public eatPlayer(playerEaten: Player) {
         this.radius = Math.sqrt(this.radius * this.radius + playerEaten.radius * playerEaten.radius);
-        playerEaten.destroy();
+        playerEaten.destroy({context: false});
         this.draw();
     }
     
