@@ -51,7 +51,7 @@ export class Player extends Graphics {
   public eatFood(foodEaten: Food) {
     if (this.destroyed) return;
     // increase surface not radius
-    this.radius = Math.sqrt(this.radius * this.radius + FOOD_RADIUS * FOOD_RADIUS) * 1.002;
+    this.radius = Math.sqrt(this.radius * this.radius + FOOD_RADIUS * FOOD_RADIUS) * 1.0002;
     foodEaten.destroy();
     this.draw();
   }
@@ -118,7 +118,11 @@ export class Player extends Graphics {
 
     const maxDistance = this.calculateMaxDistance(screen);
     const normalizedDistance = Math.min((delta / maxDistance) * 2, 1);
-    const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);
+    //const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);
+    const effectiveRadius = Math.max(this.radius, 40);
+    const boost = Math.min((effectiveRadius - 80) / 300, 0.4); // hasta +40% si radius ≥ 200
+    const velocity = (normalizedDistance * this.velocityMagnitude) * (1 + boost) / Math.pow(effectiveRadius / 80, 0.3);
+
 
     // Don't move if the distance is minimal
     if (delta > 3) {
