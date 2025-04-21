@@ -14,7 +14,6 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/protobufjs": "^6.0.0",
     "protobufjs": "^7.4.0",
     "ts-proto": "^2.7.0",
     "typescript": "~5.7.2",
