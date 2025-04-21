@@ -174,7 +174,11 @@ export class Bot extends Graphics {
     
         const maxDistance = this.calculateMaxDistance(screen); 
         const normalizedDistance = Math.min((delta / maxDistance) * 2, 1);  // Normaliza la distancia
-        const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);  // Calcula la velocidad
+        //const velocity = (normalizedDistance * this.velocityMagnitude) / Math.sqrt(this.radius / 20);  // Calcula la velocidad
+        const effectiveRadius = Math.max(this.radius, 40);
+        const boost = Math.min((effectiveRadius - 80) / 300, 0.4); // hasta +40% si radius ≥ 200
+        const velocity = (normalizedDistance * this.velocityMagnitude) * (1 + boost) / Math.pow(effectiveRadius / 80, 0.3);
+
     
         // Si la distancia es suficiente, mueve el bot hacia el objetivo
         if (delta > 3) {
