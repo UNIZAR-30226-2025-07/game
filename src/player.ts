@@ -1,44 +1,38 @@
-import {
-  Graphics,
-  Rectangle,
-} from 'pixi.js';
+import { Graphics, Rectangle } from 'pixi.js';
 import { Food, FOOD_RADIUS } from './food';
-import { Bot } from './bot'
-
-
-// El servidor nos va a dar una posición relativa al mapa. (200, 300)
-// Esto lo convertiremos a (0, 0).
+import { Bot } from './bot';
 
 export class Player extends Graphics {
-  private velocityMagnitude = 10;
-  public baseRadius;
+  public id: Uint8Array;
   public radius: number;
   private color: number;
-  public pos: {
-    x: number,
-    y: number,
-  };
+  public pos: { x: number; y: number };
   private worldBounds: WorldBounds;
 
-  constructor(worldBounds: WorldBounds, x: number, y: number, radius: number, color: number) {
+  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number) {
     super();
-    this.worldBounds = worldBounds;
-    this.baseRadius = radius;
-    this.radius = radius;
-    this.color = color;
-    this.pos = { x, y };
-    this.draw();
+      this.worldBounds = worldBounds;
+      this.id = id;
+      this.radius = radius;
+      this.color = color;
+      this.pos = { x, y };
+      this.draw();
   }
 
   private draw() {
     if (this.destroyed) return;
-    this.clear();
-    this.circle(this.pos.x, this.pos.y, this.radius);
-    this.fill(this.color);
-    this.stroke({
-      width: 3,
-      color: 0x0,
-    })
+      this.clear();
+      this.circle(this.pos.x, this.pos.y, this.radius);
+      this.fill(this.color);
+      this.stroke({ width: 3, color: 0x0 });
+  }
+
+  // Actualización desde el servidor
+  public updateFromServer(x: number, y: number, radius: number) {
+    this.pos.x = x;
+      this.pos.y = y;
+      this.radius = radius;
+      this.draw();
   }
 
   public eatPlayer(playerEaten: Player) {
