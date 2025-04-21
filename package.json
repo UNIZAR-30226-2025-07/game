@@ -25,6 +25,7 @@
     ]
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.2.5",
     "@types/websocket": "^1.0.10",
     "google-protobuf": "^3.21.4",
     "pixi.js": "^8.8.1"
