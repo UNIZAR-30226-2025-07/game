@@ -1,13 +1,16 @@
-import { Graphics, Rectangle } from 'pixi.js';
+import { Graphics, Rectangle, Sprite, Assets, Container } from 'pixi.js';
 import { Food, FOOD_RADIUS } from './food';
 import { Bot } from './bot';
 
-export class Player extends Graphics {
+export class Player extends Container {
   public id: Uint8Array;
   public radius: number;
   private color: number;
   public pos: { x: number; y: number };
   private worldBounds: WorldBounds;
+  public skinSprite: Sprite | null = null;
+  private graphics: Graphics;
+  private velocityMagnitude: number;
 
   constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number) {
     super();
@@ -16,23 +19,63 @@ export class Player extends Graphics {
       this.radius = radius;
       this.color = color;
       this.pos = { x, y };
+      this.velocityMagnitude = 5; // Valor inicial para la velocidad
+      // Crear el objeto Graphics para dibujar el jugador
+      this.graphics = new Graphics();
+      this.addChild(this.graphics);
       this.draw();
   }
+
+  public async updateSkin(skin: string) {
+    const texturePath = `/images/aspectos/${skin}`;
+    console.log("🖼️ Intentando cargar skin desde:", texturePath);
+
+    try {
+      const texture = await Assets.load(texturePath);
+      console.log("✅ Textura cargada:", texturePath);
+
+      if (!this.skinSprite) {
+          // Si no existe un sprite de skin, créalo y añádelo al contenedor
+          this.skinSprite = new Sprite(texture);
+          this.skinSprite.anchor.set(0.5);
+          this.addChildAt(this.skinSprite, 1); // Asegúrate de que esté detrás del círculo
+      } else {
+          // Si ya existe, actualiza la textura
+          this.skinSprite.texture = texture;
+      }
+      this.skinSprite.position.set(this.pos.x, this.pos.y); // Centrado en el jugador
+        this.skinSprite.width = this.radius * 2;
+        this.skinSprite.height = this.radius * 2;
+
+        console.log("✅ Skin actualizada correctamente");
+    } catch (e) {
+        console.error("❌ Error al cargar la textura:", e);
+    }
+}
+
 
   private draw() {
     if (this.destroyed) return;
-      this.clear();
-      this.circle(this.pos.x, this.pos.y, this.radius);
-      this.fill(this.color);
-      this.stroke({ width: 3, color: 0x0 });
+      //this.clear();
+      //this.circle(this.pos.x, this.pos.y, this.radius);
+      //this.fill(this.color);
+      //this.stroke({ width: 3, color: 0x0 });
+
+        this.graphics.clear();
+        this.graphics.lineStyle(3, 0x000000);
+        this.graphics.beginFill(this.color);
+        this.graphics.drawCircle(this.pos.x, this.pos.y, this.radius); // Centrado en (0, 0)
+        this.graphics.endFill();
   }
 
   // Actualización desde el servidor
-  public updateFromServer(x: number, y: number, radius: number) {
-    this.pos.x = x;
+  public async updateFromServer(x: number, y: number, radius: number, skin: string) {
+      this.pos.x = x;
       this.pos.y = y;
       this.radius = radius;
+      this.position.set(x, y); // Actualiza la posición del contenedor
       this.draw();
+      await this.updateSkin(skin);
   }
 
   public eatPlayer(playerEaten: Player) {

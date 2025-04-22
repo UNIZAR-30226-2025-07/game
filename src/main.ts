@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Application, Container, Graphics, Text, TextStyle} from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -67,16 +67,17 @@ async function connectToServer(app: Application, world: Container, player: Playe
         const player = new Player(
             WORLD_SIZE,
             new Uint8Array([1, 2, 3]),
-            WORLD_SIZE.width/2, WORLD_SIZE.height/2,
+            WORLD_SIZE.width/2, 
+            WORLD_SIZE.height/2,
             30,
             0x44bb44
         );
         playerContainer.addChild(player);
         //world.addChild(player);
 
-         // 👤 4. Mostrar nombre de usuario encima del jugador
+         // 4. Mostrar nombre de usuario encima del jugador
          const username = getCookie("username") || "Desconocido";
-         console.log("👤 Nombre leído desde cookie:", username);
+         console.log("Nombre leído desde cookie:", username);
 
          const nameText = new Text(username, new TextStyle({
              fontSize: 16,
@@ -91,6 +92,13 @@ async function connectToServer(app: Application, world: Container, player: Playe
          nameText.style.fontSize = Math.max(16, Math.min(player.radius / 3, 50));
          playerContainer.addChild(nameText);
          
+
+         // Skin desde cookie
+         const skin = getCookie("skin");
+        if (skin) {
+            console.log("Cargando skin desde cookie:", skin);
+            await player.updateSkin(skin);
+        }
 
         // Agregamos el contenedor al mundo
         world.addChild(playerContainer);
@@ -108,6 +116,8 @@ async function connectToServer(app: Application, world: Container, player: Playe
                     network.sendMovement(pointer.x, pointer.y);
                 }
 
+                // Actualizar posición de la skin
+
                 // Suavizado de cámara
                 const zoom = Math.max(0.1, Math.min(1, 30 / player.radius));
                 world.scale.set(
@@ -120,7 +130,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
                     lerp(world.position.y, app.screen.height/2 - player.pos.y * world.scale.y, 0.05)
                 );
 
-                // 🧠 Actualizar posición del nombre según el tamaño del jugador
+                // Actualizar posición del nombre según el tamaño del jugador
                 nameText.position.set(player.pos.x + 2, player.pos.y + player.radius + 15);
             } catch (error) {
                 console.error("Error en game loop:", error);
