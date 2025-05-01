@@ -29,6 +29,10 @@ export class NetworkManager {
         this.sendJoinRequest();
     }
 
+    public isConnected() {
+      return this.client.isConnected()
+    }
+
     private setupEventHandlers() {
         this.client.onEvent((event) => {
             try {
