@@ -1,15 +1,15 @@
 import { Graphics, Rectangle } from 'pixi.js';
 import { Food, FOOD_RADIUS } from './food';
-import { Bot } from './bot';
 
 export class Player extends Graphics {
-  public id: Uint8Array;
+  private velocityMagnitude = 10;
+  public id: Uint8Array | undefined;
   public radius: number;
   private color: number;
   public pos: { x: number; y: number };
   private worldBounds: WorldBounds;
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number) {
+  constructor(worldBounds: WorldBounds, id: Uint8Array | undefined, x: number, y: number, radius: number, color: number) {
     super();
       this.worldBounds = worldBounds;
       this.id = id;
@@ -35,11 +35,10 @@ export class Player extends Graphics {
       this.draw();
   }
 
-  public eatPlayer(playerEaten: Player) {
-    if (this.destroyed) return;
-    this.radius = Math.sqrt(this.radius * this.radius + playerEaten.radius * playerEaten.radius);
-    playerEaten.destroy({context: false});
-    this.draw();
+  public updateRadiusFromServer(radius: number) {
+      console.log("player = ", this.id?.toString(), ", radius = ", this.radius)
+      this.radius = radius;
+      this.draw();
   }
 
   public eatFood(foodEaten: Food) {
@@ -69,22 +68,22 @@ export class Player extends Graphics {
     return distanceSquared <= radiusSquared;
   }
 
-  public eatBot(botEaten: Bot){
+  public eatPlayer(playerEaten: Player){
     if (this.destroyed) return;
+    if (playerEaten.destroyed) return;
     // increase surface not radius
-    this.radius = Math.sqrt(this.radius * this.radius + botEaten.radius * botEaten.radius) * 1.002;
-    botEaten.destroy();
+    this.radius = Math.sqrt(this.radius * this.radius + playerEaten.radius * playerEaten.radius) * 1.002;
     this.draw();
   }
 
-  public canEatBot(bot: Bot){
+  public canEatPlayer(player: Player){
     if (this.destroyed) return false;
-    if (bot.destroyed) return false;
+    if (player.destroyed) return false;
 
     const playerCenterX = this.pos.x;
     const playerCenterY = this.pos.y;
-    const foodCenterX = bot.pos.x;
-    const foodCenterY = bot.pos.y;
+    const foodCenterX = player.pos.x;
+    const foodCenterY = player.pos.y;
 
     const dx = foodCenterX - playerCenterX;
     const dy = foodCenterY - playerCenterY;
@@ -93,7 +92,7 @@ export class Player extends Graphics {
     const distanceSquared = dx * dx + dy * dy;
     const radiusSquared = this.radius * this.radius;
 
-    return distanceSquared <= radiusSquared;
+    return distanceSquared < radiusSquared;
   }
 
   // TODO: optimize me
@@ -126,8 +125,6 @@ export class Player extends Graphics {
       // Bound checking
       this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
       this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
-
-      console.log(this.pos.x, this.pos.y)
 
       this.draw();
     }

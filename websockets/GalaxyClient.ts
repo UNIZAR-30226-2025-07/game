@@ -85,6 +85,7 @@ export class GalaxyClient {
     }
 
     public close(): void {
+      console.log('closing socket')
         if (this.socket.readyState === WebSocket.OPEN) {
             this.socket.close();
         }
