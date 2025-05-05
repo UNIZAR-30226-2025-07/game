@@ -12,7 +12,7 @@ export class Player extends Container {
   private graphics: Graphics;
   private velocityMagnitude: number;
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number) {
+  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string) {
     super();
       this.worldBounds = worldBounds;
       this.id = id;
@@ -22,11 +22,23 @@ export class Player extends Container {
       this.velocityMagnitude = 5; // Valor inicial para la velocidad
       // Crear el objeto Graphics para dibujar el jugador
       this.graphics = new Graphics();
+      this.updateSkin(skin);
       this.addChild(this.graphics);
       this.draw();
   }
 
   public async updateSkin(skin: string) {
+
+    if (!skin) {
+      console.log("❌ No se proporcionó una skin. Dibujando el círculo con el color predeterminado.");
+      if (this.skinSprite) {
+          this.removeChild(this.skinSprite);
+          this.skinSprite.destroy();
+          this.skinSprite = null;
+      }
+      return;
+    }
+    
     const texturePath = `/images/aspectos/${skin}`;
     console.log("🖼️ Intentando cargar skin desde:", texturePath);
 
@@ -50,8 +62,13 @@ export class Player extends Container {
         console.log("✅ Skin actualizada correctamente");
     } catch (e) {
         console.error("❌ Error al cargar la textura:", e);
+        if (this.skinSprite) {
+            this.removeChild(this.skinSprite);
+            this.skinSprite.destroy();
+            this.skinSprite = null;
+        }
     }
-}
+  }
 
 
   private draw() {
@@ -74,8 +91,8 @@ export class Player extends Container {
       this.pos.y = y;
       this.radius = radius;
       this.position.set(x, y); // Actualiza la posición del contenedor
-      this.draw();
       await this.updateSkin(skin);
+      this.draw();
   }
 
   public eatPlayer(playerEaten: Player) {
