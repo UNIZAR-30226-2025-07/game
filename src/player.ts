@@ -1,4 +1,4 @@
-import { Graphics, Rectangle, Sprite, Assets, Container } from 'pixi.js';
+import { Graphics, Rectangle, Sprite, Assets, Container, Text, TextStyle } from 'pixi.js';
 import { Food, FOOD_RADIUS } from './food';
 import { Bot } from './bot';
 
@@ -11,8 +11,10 @@ export class Player extends Container {
   public skinSprite: Sprite | null = null;
   private graphics: Graphics;
   private velocityMagnitude: number;
+  private nameText: Text; // Texto para el nombre del jugador
+  private username: string; // Nombre del jugador
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string) {
+  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string = "Desconocido") {
     super();
       this.worldBounds = worldBounds;
       this.id = id;
@@ -20,15 +22,28 @@ export class Player extends Container {
       this.color = color;
       this.pos = { x, y };
       this.velocityMagnitude = 5; // Valor inicial para la velocidad
+      this.username = username;
+      
       // Crear el objeto Graphics para dibujar el jugador
       this.graphics = new Graphics();
-      this.updateSkin(skin);
       this.addChild(this.graphics);
+      
+      // Crear y configurar el texto del nombre
+      this.nameText = new Text(this.username, new TextStyle({
+          fontSize: 16,
+          fill: 0x000000,
+          fontWeight: 'bold',
+          stroke: 0xffffff,
+          align: 'center',
+      }));
+      this.nameText.anchor.set(0.5);
+      this.addChild(this.nameText);
+      
+      this.updateSkin(skin);
       this.draw();
   }
 
   public async updateSkin(skin: string) {
-
     if (!skin) {
       console.log("❌ No se proporcionó una skin. Dibujando el círculo con el color predeterminado.");
       if (this.skinSprite) {
@@ -70,27 +85,45 @@ export class Player extends Container {
     }
   }
 
+  public setUsername(username: string) {
+    this.username = username;
+    this.nameText.text = username;
+  }
 
   private draw() {
     if (this.destroyed) return;
-      //this.clear();
+
+    //this.clear();
       //this.circle(this.pos.x, this.pos.y, this.radius);
       //this.fill(this.color);
       //this.stroke({ width: 3, color: 0x0 });
-
-        this.graphics.clear();
-        this.graphics.lineStyle(3, 0x000000);
-        this.graphics.beginFill(this.color);
-        this.graphics.drawCircle(this.pos.x, this.pos.y, this.radius); // Centrado en (0, 0)
-        this.graphics.endFill();
+      
+    // Dibujar el círculo del jugador
+    this.graphics.clear();
+    this.graphics.lineStyle(3, 0x000000);
+    this.graphics.beginFill(this.color);
+    this.graphics.drawCircle(this.pos.x, this.pos.y, this.radius);
+    this.graphics.endFill();
+    
+    // Actualizar posición del nombre según el tamaño del jugador
+    this.nameText.position.set(this.pos.x, this.pos.y + this.radius + 15);
+    
+    // Ajustar el tamaño de la fuente según el radio del jugador
+    this.nameText.style.fontSize = Math.max(16, Math.min(this.radius / 3, 50));
   }
 
   // Actualización desde el servidor
-  public async updateFromServer(x: number, y: number, radius: number, skin: string) {
+  public async updateFromServer(x: number, y: number, radius: number, skin: string, username?: string) {
       this.pos.x = x;
       this.pos.y = y;
       this.radius = radius;
       this.position.set(x, y); // Actualiza la posición del contenedor
+      
+      // Actualizar username si se proporciona
+      if (username) {
+        this.setUsername(username);
+      }
+      
       await this.updateSkin(skin);
       this.draw();
   }
