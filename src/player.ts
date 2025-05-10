@@ -31,9 +31,9 @@ export class Player extends Container {
       // Crear y configurar el texto del nombre
       this.nameText = new Text(this.username, new TextStyle({
           fontSize: 16,
-          fill: 0x000000,
+          fill: 0xffffff,
           fontWeight: 'bold',
-          stroke: 0xffffff,
+          stroke: 0x000000,
           align: 'center',
       }));
       this.nameText.anchor.set(0.5);
