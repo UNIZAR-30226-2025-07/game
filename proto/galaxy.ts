@@ -200,6 +200,7 @@ export interface Operation {
 }
 
 export interface JoinOperation {
+  playerID: Uint8Array;
   username: string;
   color: number;
   skin: string;
@@ -1257,19 +1258,22 @@ export const Operation: MessageFns<Operation> = {
 };
 
 function createBaseJoinOperation(): JoinOperation {
-  return { username: "", color: 0, skin: "" };
+  return { playerID: new Uint8Array(0), username: "", color: 0, skin: "" };
 }
 
 export const JoinOperation: MessageFns<JoinOperation> = {
   encode(message: JoinOperation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.playerID.length !== 0) {
+      writer.uint32(10).bytes(message.playerID);
+    }
     if (message.username !== "") {
-      writer.uint32(10).string(message.username);
+      writer.uint32(18).string(message.username);
     }
     if (message.color !== 0) {
-      writer.uint32(16).uint32(message.color);
+      writer.uint32(24).uint32(message.color);
     }
     if (message.skin !== "") {
-      writer.uint32(26).string(message.skin);
+      writer.uint32(34).string(message.skin);
     }
     return writer;
   },
@@ -1286,19 +1290,27 @@ export const JoinOperation: MessageFns<JoinOperation> = {
             break;
           }
 
-          message.username = reader.string();
+          message.playerID = reader.bytes();
           continue;
         }
         case 2: {
-          if (tag !== 16) {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
             break;
           }
 
           message.color = reader.uint32();
           continue;
         }
-        case 3: {
-          if (tag !== 26) {
+        case 4: {
+          if (tag !== 34) {
             break;
           }
 
@@ -1316,6 +1328,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
 
   fromJSON(object: any): JoinOperation {
     return {
+      playerID: isSet(object.playerID) ? bytesFromBase64(object.playerID) : new Uint8Array(0),
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
       skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
@@ -1324,6 +1337,9 @@ export const JoinOperation: MessageFns<JoinOperation> = {
 
   toJSON(message: JoinOperation): unknown {
     const obj: any = {};
+    if (message.playerID.length !== 0) {
+      obj.playerID = base64FromBytes(message.playerID);
+    }
     if (message.username !== "") {
       obj.username = message.username;
     }
@@ -1341,6 +1357,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
   },
   fromPartial<I extends Exact<DeepPartial<JoinOperation>, I>>(object: I): JoinOperation {
     const message = createBaseJoinOperation();
+    message.playerID = object.playerID ?? new Uint8Array(0);
     message.username = object.username ?? "";
     message.color = object.color ?? 0;
     message.skin = object.skin ?? "";

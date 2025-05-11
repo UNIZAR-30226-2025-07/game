@@ -5,6 +5,31 @@ import './style.css';
 
 const WORLD_SIZE = { width: 10000, height: 10000 };
 
+function parseUuidToUint8Array(uuid: string): Uint8Array | null {
+  // Regular expression to validate the UUID format
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (!uuidRegex.test(uuid)) {
+    // The string does not match the UUID format
+    return null;
+  }
+
+  // Remove hyphens for easier processing
+  const hexString = uuid.replace(/-/g, '');
+
+  // Create a Uint8Array of size 16 (a UUID is 16 bytes)
+  const byteArray = new Uint8Array(16);
+
+  // Iterate through the hex string, two characters at a time,
+  // convert each pair to a byte and store in the array
+  for (let i = 0; i < 32; i += 2) {
+    const byteHex = hexString.substring(i, i + 2);
+    byteArray[i / 2] = parseInt(byteHex, 16);
+  }
+
+  return byteArray;
+}
 
 // Función para obtener cookies
 function getCookie(name: string): string | null {
@@ -106,14 +131,23 @@ async function connectToServer(app: Application, world: Container, player: Playe
     // Obtener nombre de usuario y skin desde cookies
     const username = getCookie("username") || "Desconocido";
     const skin = getCookie("skin") || "";
-    const playerID = getCookie("PlayerID"); 
+    const playerIDcookie = getCookie("PlayerID"); 
+    if (playerIDcookie == null) {
+      console.log("playerID not specified");
+      return
+    }
+    const playerID = parseUuidToUint8Array(playerIDcookie);
+    if (playerID == null) {
+      console.log("error parsing playerID: ", playerIDcookie);
+      return
+    }
     console.log("Nombre leído desde cookie:", username);
     console.log("PlayerID leído desde cookie:", playerID);
 
     // Crear jugador con su nombre
     const player = new Player(
       WORLD_SIZE,
-      playerID ? new Uint8Array(playerID.split(',').map(Number)) : new Uint8Array([1, 2, 3]),
+      playerID,
       WORLD_SIZE.width / 2,
       WORLD_SIZE.height / 2,
       30,
