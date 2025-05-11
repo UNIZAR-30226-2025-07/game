@@ -106,12 +106,14 @@ async function connectToServer(app: Application, world: Container, player: Playe
     // Obtener nombre de usuario y skin desde cookies
     const username = getCookie("username") || "Desconocido";
     const skin = getCookie("skin") || "";
+    const playerID = getCookie("PlayerID"); 
     console.log("Nombre leído desde cookie:", username);
+    console.log("PlayerID leído desde cookie:", playerID);
 
     // Crear jugador con su nombre
     const player = new Player(
       WORLD_SIZE,
-      new Uint8Array([1, 2, 3]),
+      playerID ? new Uint8Array(playerID.split(',').map(Number)) : new Uint8Array([1, 2, 3]),
       WORLD_SIZE.width / 2,
       WORLD_SIZE.height / 2,
       30,
