@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -57,6 +57,33 @@ async function connectToServer(app: Application, world: Container, player: Playe
     await app.init({ background: '#000000', resizeTo: window });
     document.body.appendChild(app.canvas);
 
+    // Crear el texto de ayuda para pausar
+    const pauseHelpText = new Text("Pulsa P para pausar la partida", {
+        fontSize: 16,
+        fill: 0xffffff,
+        fontWeight: 'bold',
+        stroke: 0x000000,
+        strokeThickness: 4,
+    });
+    
+    // Posicionar el texto en la esquina superior derecha
+    pauseHelpText.anchor.set(1, 0); // Ancla en la esquina superior derecha
+    pauseHelpText.position.set(
+        app.screen.width - 30, // 10 píxeles desde el borde derecho
+        30 // 10 píxeles desde el borde superior
+    );
+
+    // Mantener el texto en la posición correcta cuando se redimensione la ventana
+    app.renderer.on('resize', () => {
+        pauseHelpText.position.set(
+            app.screen.width - 10,
+            10
+        );
+    });
+
+    // Añadir el texto directamente al stage (no al world)
+    app.stage.addChild(pauseHelpText);
+
     const world = new Container();
     // Para crear las estrellas del fondo
     const starContainer = new Container();
@@ -95,6 +122,9 @@ async function connectToServer(app: Application, world: Container, player: Playe
 
     // Agregamos el contenedor al mundo
     world.addChild(playerContainer);
+
+    // Agregar jugador al mundo
+    world.addChild(player);
 
     // 5. Conexión mejorada
     const network = await connectToServer(app, world, player);
@@ -149,6 +179,16 @@ async function connectToServer(app: Application, world: Container, player: Playe
         console.error("Error en game loop:", error);
       }
     });
+
+    // Añadir event listener para la tecla P
+    window.addEventListener('keydown', (event) => {
+        if (event.key.toLowerCase() === 'p') {
+          if (network.isConnected()) {
+            network.sendPauseEvent();
+            console.log("🎮 Enviando evento de pausa al servidor");
+          }
+        }
+      });
 
     // 7. Manejo mejorado de cierre
     window.addEventListener('beforeunload', () => {
