@@ -156,6 +156,7 @@ export interface NewPlayerEvent {
   position: Vector2D | undefined;
   radius: number;
   color: number;
+  skin: string;
 }
 
 export interface JoinEvent {
@@ -163,6 +164,7 @@ export interface JoinEvent {
   position: Vector2D | undefined;
   radius: number;
   color: number;
+  skin: string;
 }
 
 export interface NewFoodEvent {
@@ -200,6 +202,7 @@ export interface Operation {
 export interface JoinOperation {
   username: string;
   color: number;
+  skin: string;
 }
 
 export interface LeaveOperation {
@@ -493,7 +496,7 @@ export const Event: MessageFns<Event> = {
 };
 
 function createBaseNewPlayerEvent(): NewPlayerEvent {
-  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0 };
+  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0, skin: "" };
 }
 
 export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
@@ -509,6 +512,9 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
     }
     if (message.color !== 0) {
       writer.uint32(32).uint32(message.color);
+    }
+    if (message.skin !== "") {
+      writer.uint32(42).string(message.skin);
     }
     return writer;
   },
@@ -552,6 +558,14 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
           message.color = reader.uint32();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.skin = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -567,6 +581,7 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
       position: isSet(object.position) ? Vector2D.fromJSON(object.position) : undefined,
       radius: isSet(object.radius) ? globalThis.Number(object.radius) : 0,
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
+      skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
     };
   },
 
@@ -584,6 +599,9 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
     if (message.color !== 0) {
       obj.color = Math.round(message.color);
     }
+    if (message.skin !== "") {
+      obj.skin = message.skin;
+    }
     return obj;
   },
 
@@ -598,12 +616,13 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
       : undefined;
     message.radius = object.radius ?? 0;
     message.color = object.color ?? 0;
+    message.skin = object.skin ?? "";
     return message;
   },
 };
 
 function createBaseJoinEvent(): JoinEvent {
-  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0 };
+  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0, skin: "" };
 }
 
 export const JoinEvent: MessageFns<JoinEvent> = {
@@ -619,6 +638,9 @@ export const JoinEvent: MessageFns<JoinEvent> = {
     }
     if (message.color !== 0) {
       writer.uint32(32).uint32(message.color);
+    }
+    if (message.skin !== "") {
+      writer.uint32(42).string(message.skin);
     }
     return writer;
   },
@@ -662,6 +684,14 @@ export const JoinEvent: MessageFns<JoinEvent> = {
           message.color = reader.uint32();
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.skin = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -677,6 +707,7 @@ export const JoinEvent: MessageFns<JoinEvent> = {
       position: isSet(object.position) ? Vector2D.fromJSON(object.position) : undefined,
       radius: isSet(object.radius) ? globalThis.Number(object.radius) : 0,
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
+      skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
     };
   },
 
@@ -694,6 +725,9 @@ export const JoinEvent: MessageFns<JoinEvent> = {
     if (message.color !== 0) {
       obj.color = Math.round(message.color);
     }
+    if (message.skin !== "") {
+      obj.skin = message.skin;
+    }
     return obj;
   },
 
@@ -708,6 +742,7 @@ export const JoinEvent: MessageFns<JoinEvent> = {
       : undefined;
     message.radius = object.radius ?? 0;
     message.color = object.color ?? 0;
+    message.skin = object.skin ?? "";
     return message;
   },
 };
@@ -1222,7 +1257,7 @@ export const Operation: MessageFns<Operation> = {
 };
 
 function createBaseJoinOperation(): JoinOperation {
-  return { username: "", color: 0 };
+  return { username: "", color: 0, skin: "" };
 }
 
 export const JoinOperation: MessageFns<JoinOperation> = {
@@ -1232,6 +1267,9 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     }
     if (message.color !== 0) {
       writer.uint32(16).uint32(message.color);
+    }
+    if (message.skin !== "") {
+      writer.uint32(26).string(message.skin);
     }
     return writer;
   },
@@ -1259,6 +1297,14 @@ export const JoinOperation: MessageFns<JoinOperation> = {
           message.color = reader.uint32();
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.skin = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1272,6 +1318,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     return {
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
+      skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
     };
   },
 
@@ -1283,6 +1330,9 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     if (message.color !== 0) {
       obj.color = Math.round(message.color);
     }
+    if (message.skin !== "") {
+      obj.skin = message.skin;
+    }
     return obj;
   },
 
@@ -1293,6 +1343,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     const message = createBaseJoinOperation();
     message.username = object.username ?? "";
     message.color = object.color ?? 0;
+    message.skin = object.skin ?? "";
     return message;
   },
 };

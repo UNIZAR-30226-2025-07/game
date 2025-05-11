@@ -47,51 +47,53 @@ export class NetworkManager {
         switch (event.eventType) {
           case Galaxy.EventType.EvNewPlayer:
             this.handleNewPlayer({
-              playerID: event.newPlayerEvent.playerID,
-              position: event.newPlayerEvent.position,
-              radius: event.newPlayerEvent.radius,
-              color: event.newPlayerEvent.color
+              playerID: event.newPlayerEvent!.playerID,
+              position: event.newPlayerEvent!.position,
+              radius: event.newPlayerEvent!.radius,
+              color: event.newPlayerEvent!.color,
+              skin: event.joinEvent!.skin,
             });
             break;
           case Galaxy.EventType.EvJoin:
             this.handleJoin({
-              playerID: event.joinEvent.playerID,
-              position: event.joinEvent.position,
-              radius: event.joinEvent.radius,
-              color: event.joinEvent.color
+              playerID: event.joinEvent!.playerID,
+              position: event.joinEvent!.position,
+              radius: event.joinEvent!.radius,
+              color: event.joinEvent!.color,
+              skin: event.joinEvent!.skin,
             });
             break;
           case Galaxy.EventType.EvPlayerMove:
             this.handlePlayerMove({
-              playerID: event.playerMoveEvent.playerID,
-              position: event.playerMoveEvent.position
+              playerID: event.playerMoveEvent!.playerID,
+              position: event.playerMoveEvent!.position
             });
             break;
           case Galaxy.EventType.EvNewFood:
             this.handleNewFood({
-              position: event.newFoodEvent.position,
-              color: event.newFoodEvent.color
+              position: event.newFoodEvent!.position,
+              color: event.newFoodEvent!.color
             });
             break;
           case Galaxy.EventType.EvPlayerGrow:
             this.handlePlayerGrow({
-              playerID: event.playerGrowEvent.playerID,
-              radius: event.playerGrowEvent.radius
+              playerID: event.playerGrowEvent!.playerID,
+              radius: event.playerGrowEvent!.radius
             })
             break;
           case Galaxy.EventType.EvDestroyFood:
             this.handleDestroyFood({
-              position: event.destroyFoodEvent.position!
+              position: event.destroyFoodEvent!.position!
             });
             break;
           case Galaxy.EventType.EvDestroyPlayer:
             this.handleDestroyPlayer({
-              playerID: event.destroyPlayerEvent.playerID
+              playerID: event.destroyPlayerEvent!.playerID
             });
             break;
           case Galaxy.EventType.EvUnused:
             this.handleDestroyPlayer({
-              playerID: event.destroyPlayerEvent.playerID
+              playerID: event.destroyPlayerEvent!.playerID
             });
             break;
         }
@@ -144,9 +146,11 @@ export class NetworkManager {
       operationType: Galaxy.OperationType.OpJoin,
       joinOperation: {
         username: this.player.username,
-        color: this.player.color
+        color: this.player.color,
+        skin: this.player.skin
       }
     };
+    console.log(op);
     this.client.sendOperation(op);
   }
 
@@ -181,7 +185,7 @@ export class NetworkManager {
   private handleJoin(event: Galaxy.NewPlayerEvent) {
     console.log("registering me", event)
     this.player.id = event.playerID;
-    this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color)
+    this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color, event.skin)
     return
   }
 
@@ -193,11 +197,12 @@ export class NetworkManager {
     const player = new Player(
       WORLD_SIZE,
       event.playerID,
-      "tobeimplemented",
       event.position!.X,
       event.position!.Y,
       event.radius,
-      event.color
+      event.color,
+      event.skin,
+      event.username
     );
 
     this.players.set(playerID, player);
@@ -207,10 +212,10 @@ export class NetworkManager {
   private handlePlayerMove(event: Galaxy.PlayerMoveEvent) {
     const playerID = hashID(event.playerID);
     if (this.isCurrentPlayer(playerID)) {
-      this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius, this.player.color);
+      this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius, this.player.color, this.player.skin);
     } else if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;
-      player.updateFromServer(event.position!.X, event.position!.Y, player.radius, player.color);
+      player.updateFromServer(event.position!.X, event.position!.Y, player.radius, player.color, player.skin);
     }
   }
 
