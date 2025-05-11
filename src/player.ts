@@ -16,46 +16,47 @@ export class Player extends Container {
 
   constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string = "Desconocido") {
     super();
-      this.worldBounds = worldBounds;
-      this.id = id;
-      this.username = username;
-      this.radius = radius;
-      this.color = color;
-      this.pos = { x, y };
-      this.velocityMagnitude = 5; // Valor inicial para la velocidad
-      this.username = username;
-      this.skin = skin;
-      
-      // Crear el objeto Graphics para dibujar el jugador
-      this.graphics = new Graphics();
-      this.addChild(this.graphics);
-      
-      // Crear y configurar el texto del nombre
-      this.nameText = new Text(this.username, new TextStyle({
-          fontSize: 16,
-          fill: 0xffffff,
-          fontWeight: 'bold',
-          stroke: 0x000000,
-          align: 'center',
-      }));
-      this.nameText.anchor.set(0.5);
-      this.addChild(this.nameText);
-      
-      this.updateSkin(skin);
-      this.draw();
+    this.worldBounds = worldBounds;
+    this.id = id;
+    this.username = username;
+    this.radius = radius;
+    this.color = color;
+    this.pos = { x, y };
+    this.velocityMagnitude = 5; // Valor inicial para la velocidad
+    this.username = username;
+    this.skin = skin;
+
+    // Crear el objeto Graphics para dibujar el jugador
+    this.graphics = new Graphics();
+    this.addChild(this.graphics);
+
+    // Crear y configurar el texto del nombre
+    this.nameText = new Text(this.username, new TextStyle({
+      fontSize: 16,
+      fill: 0xffffff,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      align: 'center',
+    }));
+    this.nameText.anchor.set(0.5);
+    this.nameText.position.set(0, this.radius + 65)
+    this.addChild(this.nameText);
+
+    this.updateSkin(skin);
+    this.draw();
   }
 
   public async updateSkin(skin: string) {
     if (!skin) {
       console.log("❌ No se proporcionó una skin. Dibujando el círculo con el color predeterminado.");
       if (this.skinSprite) {
-          this.removeChild(this.skinSprite);
-          this.skinSprite.destroy();
-          this.skinSprite = null;
+        this.removeChild(this.skinSprite);
+        this.skinSprite.destroy();
+        this.skinSprite = null;
       }
       return;
     }
-    
+
     const texturePath = `/images/aspectos/${skin}`;
     console.log("🖼️ Intentando cargar skin desde:", texturePath);
 
@@ -64,26 +65,21 @@ export class Player extends Container {
       console.log("✅ Textura cargada:", texturePath);
 
       if (!this.skinSprite) {
-          // Si no existe un sprite de skin, créalo y añádelo al contenedor
-          this.skinSprite = new Sprite(texture);
-          this.skinSprite.anchor.set(0.5);
-          this.addChildAt(this.skinSprite, 1); // Asegúrate de que esté detrás del círculo
+        this.skinSprite = new Sprite(texture);
+        this.skinSprite.anchor.set(0.5); // Importante: centrar el punto de anclaje
+        //Añadir delante del círculo
+        this.addChild(this.skinSprite);
       } else {
-          // Si ya existe, actualiza la textura
-          this.skinSprite.texture = texture;
+        this.skinSprite.texture = texture;
       }
-      this.skinSprite.position.set(this.pos.x, this.pos.y); // Centrado en el jugador
-        this.skinSprite.width = this.radius * 2;
-        this.skinSprite.height = this.radius * 2;
 
-        console.log("✅ Skin actualizada correctamente");
+      // Posicionar la skin en el centro del contenedor (0,0)
+      this.skinSprite.position.set(0, 0);
+      this.skinSprite.scale.set(this.radius / 100, this.radius / 100); // Ajustar el tamaño de la skin según el radio
+
+      console.log("✅ Skin actualizada correctamente");
     } catch (e) {
-        console.error("❌ Error al cargar la textura:", e);
-        if (this.skinSprite) {
-            this.removeChild(this.skinSprite);
-            this.skinSprite.destroy();
-            this.skinSprite = null;
-        }
+      console.error("❌ Error al cargar la textura:", e);
     }
   }
 
@@ -96,47 +92,60 @@ export class Player extends Container {
     if (this.destroyed) return;
 
     //this.clear();
-      //this.circle(this.pos.x, this.pos.y, this.radius);
-      //this.fill(this.color);
-      //this.stroke({ width: 3, color: 0x0 });
-      
+    //this.circle(this.pos.x, this.pos.y, this.radius);
+    //this.fill(this.color);
+    //this.stroke({ width: 3, color: 0x0 });
+
     // Dibujar el círculo del jugador
+    if (this.destroyed) return;
+
     this.graphics.clear();
     this.graphics.lineStyle(3, 0x000000);
     this.graphics.beginFill(this.color);
-    this.graphics.drawCircle(this.pos.x, this.pos.y, this.radius);
+    this.graphics.drawCircle(0, 0, this.radius);
     this.graphics.endFill();
-    
-    // Actualizar posición del nombre según el tamaño del jugador
-    this.nameText.position.set(this.pos.x, this.pos.y + this.radius + 15);
-    
-    // Ajustar el tamaño de la fuente según el radio del jugador
-    this.nameText.style.fontSize = Math.max(16, Math.min(this.radius / 3, 50));
+
+    console.log("🎨 Círculo dibujado con color:", this.color);
+
+    // // Actualizar posición del nombre según el tamaño del jugador
+    this.nameText.position.set(0, this.radius + 70);
+    //
+    // // Ajustar el tamaño de la fuente según el radio del jugador
+    this.nameText.style.fontSize = Math.min(30, Math.max(this.radius / 3, 50));
   }
 
   // Actualización desde el servidor
   public async updateFromServer(x: number, y: number, radius: number, color: number, skin: string, username?: string) {
-      this.pos.x = x;
-      this.pos.y = y;
-      this.radius = radius;
-      this.color = color;
-      this.position.set(x, y); // Actualiza la posición del contenedor
-      
-      // Actualizar username si se proporciona
-      if (username) {
-        this.setUsername(username);
-      }
-      
-      if (skin != this.skin) {
-        await this.updateSkin(skin);
-      }
-      this.draw();
+    console.log("📌 Actualizando jugador:", { x, y, radius, color, skin, username });
+
+    this.pos.x = x;
+    this.pos.y = y;
+    this.radius = radius;
+    this.color = color;
+
+    // Actualizar posición del contenedor
+    this.position.set(x, y);
+
+    // Actualizar username si se proporciona
+    if (username) {
+      this.setUsername(username);
+    }
+
+    // Si hay skin, actualizarla
+    if (skin !== "" && !this.skinSprite) {
+      await this.updateSkin(skin);
+    }
+
+    // Asegurar que el nombre esté en la posición correcta
+    if (this.nameText) {
+      this.nameText.position.set(0, this.radius + 15);
+    }
   }
 
   public updateRadiusFromServer(radius: number) {
-      console.log("player = ", this.id?.toString(), ", radius = ", this.radius)
-      this.radius = radius;
-      this.draw();
+    console.log("player = ", this.id?.toString(), ", radius = ", this.radius)
+    this.radius = radius;
+    this.draw();
   }
 
   public eatFood(foodEaten: Food) {
@@ -166,7 +175,7 @@ export class Player extends Container {
     return distanceSquared <= radiusSquared;
   }
 
-  public eatPlayer(playerEaten: Player){
+  public eatPlayer(playerEaten: Player) {
     if (this.destroyed) return;
     if (playerEaten.destroyed) return;
     // increase surface not radius
@@ -174,7 +183,7 @@ export class Player extends Container {
     this.draw();
   }
 
-  public canEatPlayer(player: Player){
+  public canEatPlayer(player: Player) {
     if (this.destroyed) return false;
     if (player.destroyed) return false;
 
@@ -224,7 +233,11 @@ export class Player extends Container {
       this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
       this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
 
+      // Actualizar la posición del contenedor completo
+      this.position.set(this.pos.x, this.pos.y);
+
       this.draw();
     }
   }
 }
+
