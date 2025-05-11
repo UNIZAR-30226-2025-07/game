@@ -64,27 +64,22 @@ export class Player extends Container {
       console.log("✅ Textura cargada:", texturePath);
 
       if (!this.skinSprite) {
-          // Si no existe un sprite de skin, créalo y añádelo al contenedor
           this.skinSprite = new Sprite(texture);
-          this.skinSprite.anchor.set(0.5);
-          this.addChildAt(this.skinSprite, 1); // Asegúrate de que esté detrás del círculo
+          this.skinSprite.anchor.set(0.5); // Importante: centrar el punto de anclaje
+          //Añadir delante del círculo
+          this.addChild(this.skinSprite);
       } else {
-          // Si ya existe, actualiza la textura
           this.skinSprite.texture = texture;
       }
-      this.skinSprite.position.set(this.pos.x, this.pos.y); // Centrado en el jugador
-        this.skinSprite.width = this.radius * 2;
-        this.skinSprite.height = this.radius * 2;
 
-        console.log("✅ Skin actualizada correctamente");
-    } catch (e) {
-        console.error("❌ Error al cargar la textura:", e);
-        if (this.skinSprite) {
-            this.removeChild(this.skinSprite);
-            this.skinSprite.destroy();
-            this.skinSprite = null;
-        }
-    }
+      // Posicionar la skin en el centro del contenedor (0,0)
+      this.skinSprite.position.set(0,0);
+      this.skinSprite.scale.set(this.radius / 100, this.radius / 100); // Ajustar el tamaño de la skin según el radio
+
+      console.log("✅ Skin actualizada correctamente");
+  } catch (e) {
+      console.error("❌ Error al cargar la textura:", e);
+  }
   }
 
   public setUsername(username: string) {
@@ -101,11 +96,15 @@ export class Player extends Container {
       //this.stroke({ width: 3, color: 0x0 });
       
     // Dibujar el círculo del jugador
+    if (this.destroyed) return;
+    
     this.graphics.clear();
     this.graphics.lineStyle(3, 0x000000);
     this.graphics.beginFill(this.color);
-    this.graphics.drawCircle(this.pos.x, this.pos.y, this.radius);
+    this.graphics.drawCircle(0, 0, this.radius);
     this.graphics.endFill();
+    
+    console.log("🎨 Círculo dibujado con color:", this.color);
     
     // Actualizar posición del nombre según el tamaño del jugador
     this.nameText.position.set(this.pos.x, this.pos.y + this.radius + 15);
@@ -116,21 +115,40 @@ export class Player extends Container {
 
   // Actualización desde el servidor
   public async updateFromServer(x: number, y: number, radius: number, color: number, skin: string, username?: string) {
-      this.pos.x = x;
-      this.pos.y = y;
-      this.radius = radius;
-      this.color = color;
-      this.position.set(x, y); // Actualiza la posición del contenedor
-      
-      // Actualizar username si se proporciona
-      if (username) {
+    console.log("📌 Actualizando jugador:", { x, y, radius, color, skin, username });
+    
+    this.pos.x = x;
+    this.pos.y = y;
+    this.radius = radius;
+    this.color = color;
+    
+    // Actualizar posición del contenedor
+    this.position.set(x, y);
+    
+    // Actualizar username si se proporciona
+    if (username) {
         this.setUsername(username);
+    }
+    
+     // Si hay skin, actualizarla
+     if (skin && skin !== "") {
+      if (this.skinSprite) {
+          // Mantener la skin centrada en (0,0) relativo al contenedor
+          this.skinSprite.position.set(0,0);
+          // Actualizar el tamaño de la skin según el radio
+          this.skinSprite.width = this.radius * 2;
+          this.skinSprite.height = this.radius * 2;
+      } else {
+          await this.updateSkin(skin);
       }
-      
-      if (skin != this.skin) {
-        await this.updateSkin(skin);
-      }
+  } else {
       this.draw();
+  }
+    
+    // Asegurar que el nombre esté en la posición correcta
+    if (this.nameText) {
+        this.nameText.position.set(this.pos.x, this.radius + 15);
+    }
   }
 
   public updateRadiusFromServer(radius: number) {
@@ -224,7 +242,11 @@ export class Player extends Container {
       this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
       this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
 
+      // Actualizar la posición del contenedor completo
+      this.position.set(this.pos.x, this.pos.y);
+
       this.draw();
     }
   }
 }
+
