@@ -5,6 +5,7 @@ import './style.css';
 
 const WORLD_SIZE = { width: 10000, height: 10000 };
 
+
 // Función para obtener cookies
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -41,22 +42,32 @@ async function connectToServer(app: Application, world: Container, player: Playe
   }
 }
 
+
 (async () => {
+
   // 2. Inicialización con manejo de errores
   try {
     const app = new Application({
       antialias: true,
       autoDensity: true,
       resolution: 2,
-      backgroundColor: 0xffffff
+      backgroundColor: 0x000000
     });
 
-    await app.init({ background: '#ffffff', resizeTo: window });
+    await app.init({ background: '#000000', resizeTo: window });
     document.body.appendChild(app.canvas);
 
     const world = new Container();
+    // Para crear las estrellas del fondo
+    const starContainer = new Container();
     app.stage.addChild(world);
+    // Con esto conseguimos que queden por debajo de la vista del resto de los objetos
+    world.addChildAt(starContainer, 0); 
 
+     // Generar estrellas en el fondo
+     generateStars(starContainer, 400, WORLD_SIZE); // Genera 400 estrellas
+
+    
     // 3. Debug visual del área de juego
     const worldBounds = new Graphics()
       .rect(0, 0, WORLD_SIZE.width, WORLD_SIZE.height)
@@ -152,6 +163,41 @@ async function connectToServer(app: Application, world: Container, player: Playe
     alert("Error al iniciar el juego. Ver consola para detalles.");
   }
 })();
+
+// Con esto conseguimos que tengan forma de estrella y no de círculo
+// distinguiendo de esta manera las estrellas del fondo con la comida de los jugadores
+function drawStar(graphics: Graphics, x: number, y: number, radius: number, points: number, innerRadius: number, color: number) {
+    const step = Math.PI / points;
+    graphics.beginFill(color);
+
+    graphics.moveTo(x + radius, y);
+    for (let i = 0; i < 2 * points; i++) {
+        const angle = i * step;
+        const r = i % 2 === 0 ? radius : innerRadius;
+        graphics.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+    }
+    graphics.closePath();
+    graphics.endFill();
+}
+
+// Función que genera las estrellas de fondo
+// Las generamos de manera aleatoria y las añadimos al contenedor de estrellas
+function generateStars(container: Container, numStars: number, worldSize: { width: number; height: number }) {
+    for (let i = 0; i < numStars; i++) {
+        const star = new Graphics();
+        const x = Math.random() * worldSize.width;
+        const y = Math.random() * worldSize.height;
+        const radius = Math.random() * 5 + 3; // Tamaño aleatorio entre 3 y 8
+        const innerRadius = radius / 2; // Radio interno más pequeño
+        const points = 5; // Número de puntas de la estrella
+        const color = 0xffffff; // Color blanco para las estrellas
+
+        drawStar(star, 0, 0, radius, points, innerRadius, color);
+
+        star.position.set(x, y);
+        container.addChild(star);
+    }
+}
 
 function lerp(start: number, end: number, t: number): number {
   return start * (1 - t) + end * t;
