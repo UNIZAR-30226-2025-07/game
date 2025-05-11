@@ -8,7 +8,7 @@ export class GalaxyClient {
     private socket!: WebSocket;
     private eventHandlers: GalaxyEventHandler[] = [];
     private reconnectAttempts: number = 0;
-    private readonly maxReconnectAttempts: number = 5;
+    private readonly maxReconnectAttempts: number = 0;
     private readonly reconnectInterval: number = 3000;
 
     constructor(private readonly url: string) {
@@ -39,7 +39,7 @@ export class GalaxyClient {
 
         this.socket.onclose = () => {
             console.log("WebSocket disconnected");
-            this.handleReconnection();
+            // this.handleReconnection();
         };
 
         this.socket.onerror = (error: Event) => { // Aquí usamos el Event global del DOM
@@ -85,6 +85,7 @@ export class GalaxyClient {
     }
 
     public close(): void {
+      console.log('closing socket')
         if (this.socket.readyState === WebSocket.OPEN) {
             this.socket.close();
         }
