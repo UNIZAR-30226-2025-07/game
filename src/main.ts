@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -63,38 +63,24 @@ async function connectToServer(app: Application, world: Container, player: Playe
       .stroke({ width: 4, color: 0xff0000 }); // Rojo para mejor visibilidad
     world.addChild(worldBounds);
 
-
-    // 👤 4. Mostrar nombre de usuario encima del jugador
-    const username = getCookie("username") || "Jugador";
-    console.log("👤 Nombre leído desde cookie:", username);
-
-    // Creamos el contenedor del jugador
     const playerContainer = new Container();
 
+    // Obtener nombre de usuario y skin desde cookies
+    const username = getCookie("username") || "Desconocido";
+    const skin = getCookie("skin") || "";
+    console.log("Nombre leído desde cookie:", username);
+
+    // Crear jugador con su nombre
     const player = new Player(
       WORLD_SIZE,
-      undefined,
-      username,
-      WORLD_SIZE.width / 2, WORLD_SIZE.height / 2,
+      new Uint8Array([1, 2, 3]),
+      WORLD_SIZE.width / 2,
+      WORLD_SIZE.height / 2,
       30,
-      0x44bb44
+      0x44bb44,
+      skin,
+      username
     );
-    playerContainer.addChild(player);
-    //world.addChild(player);
-
-    const nameText = new Text(username, new TextStyle({
-      fontSize: 16,
-      fill: 0x000000,
-      fontWeight: 'bold',
-      stroke: 0xffffff,
-      align: 'center',
-    }));
-
-    nameText.anchor.set(0.5);
-    nameText.position.set(player.pos.x + 2, player.pos.y + player.radius + 15);
-    nameText.style.fontSize = Math.max(16, Math.min(player.radius / 3, 50));
-    playerContainer.addChild(nameText);
-
 
     // Agregamos el contenedor al mundo
     world.addChild(playerContainer);
@@ -116,7 +102,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
         network.foods.forEach(f => {
           if (player.canEatFood(f)) {
             player.eatFood(f);
-            network.sendEatFood({X: Math.floor(f.pos.x), Y: Math.floor(f.pos.y)}, Math.floor(player.radius));
+            network.sendEatFood({ X: Math.floor(f.pos.x), Y: Math.floor(f.pos.y) }, Math.floor(player.radius));
           }
         });
 
@@ -137,6 +123,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
         } else {
           zoom = Math.max(0.1, Math.min(1, 100 / (player.radius - 80)));
         }
+
         world.scale.set(
           lerp(world.scale.x, zoom, 0.05),
           lerp(world.scale.y, zoom, 0.05)
@@ -147,8 +134,6 @@ async function connectToServer(app: Application, world: Container, player: Playe
           lerp(world.position.y, app.screen.height / 2 - player.pos.y * world.scale.y, 0.05)
         );
 
-        // 🧠 Actualizar posición del nombre según el tamaño del jugador
-        nameText.position.set(player.pos.x + 2, player.pos.y + player.radius + 15);
       } catch (error) {
         console.error("Error en game loop:", error);
       }
