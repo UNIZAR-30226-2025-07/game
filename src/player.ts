@@ -12,7 +12,7 @@ export class Player extends Container {
   private graphics: Graphics;
   private velocityMagnitude: number;
   private nameText: Text; // Texto para el nombre del jugador
-  private username: string; // Nombre del jugador
+  public username: string; // Nombre del jugador
 
   constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string = "Desconocido") {
     super();
@@ -115,11 +115,11 @@ export class Player extends Container {
   }
 
   // Actualización desde el servidor
-  public async updateFromServer(x: number, y: number, radius: number, skin: string, username?: string) {
+  public async updateFromServer(x: number, y: number, radius: number, color: number, skin: string, username?: string) {
       this.pos.x = x;
       this.pos.y = y;
       this.radius = radius;
-      this.skin = skin;
+      this.color = color;
       this.position.set(x, y); // Actualiza la posición del contenedor
       
       // Actualizar username si se proporciona
@@ -127,7 +127,9 @@ export class Player extends Container {
         this.setUsername(username);
       }
       
-      await this.updateSkin(skin);
+      if (skin != this.skin) {
+        await this.updateSkin(skin);
+      }
       this.draw();
   }
 
