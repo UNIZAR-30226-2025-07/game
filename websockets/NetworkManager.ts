@@ -119,7 +119,6 @@ export class NetworkManager {
     this.oldPos = vector;
 
     const op: Galaxy.Operation = {
-      playerID: this.player.id!,
       operationType: Galaxy.OperationType.OpMove,
         moveOperation: { position: vector }
     };
@@ -128,7 +127,6 @@ export class NetworkManager {
 
   public sendEatFood(foodPos: { X: number, Y: number }, newRadius: number) {
     const op: Galaxy.Operation = {
-      playerID: this.player.id,
       operationType: Galaxy.OperationType.OpEatFood,
       eatFoodOperation: {
         foodPosition: foodPos,
@@ -139,11 +137,24 @@ export class NetworkManager {
   }
 
   /**
+   * Enviar operación de join al server
+   */
+  public sendJoin() {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpJoin,
+      joinOperation: {
+        username: this.player.username,
+        color: this.player.color
+      }
+    };
+    this.client.sendOperation(op);
+  }
+
+  /**
    * Enviar operación de abandono del juego
    */
   public sendLeave() {
     const op: Galaxy.Operation = {
-      playerID: this.player.id,
       operationType: Galaxy.OperationType.OpLeave,
         leaveOperation: {} // Sin datos adicionales
     };
@@ -157,7 +168,6 @@ export class NetworkManager {
    */
   public sendEatPlayer(eatenPlayerId: Uint8Array, newRadius: number) {
     const op: Galaxy.Operation = {
-      playerID: this.player.id,
       operationType: Galaxy.OperationType.OpEatPlayer,
         eatPlayerOperation: {
           playerEaten: eatenPlayerId,
@@ -171,7 +181,7 @@ export class NetworkManager {
   private handleJoin(event: Galaxy.NewPlayerEvent) {
     console.log("registering me", event)
     this.player.id = event.playerID;
-    this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius)
+    this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color)
     return
   }
 
@@ -183,6 +193,7 @@ export class NetworkManager {
     const player = new Player(
       WORLD_SIZE,
       event.playerID,
+      "tobeimplemented",
       event.position!.X,
       event.position!.Y,
       event.radius,
@@ -196,10 +207,10 @@ export class NetworkManager {
   private handlePlayerMove(event: Galaxy.PlayerMoveEvent) {
     const playerID = hashID(event.playerID);
     if (this.isCurrentPlayer(playerID)) {
-      this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius);
+      this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius, this.player.color);
     } else if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;
-      player.updateFromServer(event.position!.X, event.position!.Y, player.radius);
+      player.updateFromServer(event.position!.X, event.position!.Y, player.radius, player.color);
     }
   }
 

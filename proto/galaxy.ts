@@ -189,7 +189,6 @@ export interface DestroyPlayerEvent {
 }
 
 export interface Operation {
-  playerID: Uint8Array;
   operationType: OperationType;
   joinOperation?: JoinOperation | undefined;
   leaveOperation?: LeaveOperation | undefined;
@@ -199,6 +198,8 @@ export interface Operation {
 }
 
 export interface JoinOperation {
+  username: string;
+  color: number;
 }
 
 export interface LeaveOperation {
@@ -1063,7 +1064,6 @@ export const DestroyPlayerEvent: MessageFns<DestroyPlayerEvent> = {
 
 function createBaseOperation(): Operation {
   return {
-    playerID: new Uint8Array(0),
     operationType: 0,
     joinOperation: undefined,
     leaveOperation: undefined,
@@ -1075,9 +1075,6 @@ function createBaseOperation(): Operation {
 
 export const Operation: MessageFns<Operation> = {
   encode(message: Operation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.playerID.length !== 0) {
-      writer.uint32(10).bytes(message.playerID);
-    }
     if (message.operationType !== 0) {
       writer.uint32(16).int32(message.operationType);
     }
@@ -1106,14 +1103,6 @@ export const Operation: MessageFns<Operation> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.playerID = reader.bytes();
-          continue;
-        }
         case 2: {
           if (tag !== 16) {
             break;
@@ -1173,7 +1162,6 @@ export const Operation: MessageFns<Operation> = {
 
   fromJSON(object: any): Operation {
     return {
-      playerID: isSet(object.playerID) ? bytesFromBase64(object.playerID) : new Uint8Array(0),
       operationType: isSet(object.operationType) ? operationTypeFromJSON(object.operationType) : 0,
       joinOperation: isSet(object.joinOperation) ? JoinOperation.fromJSON(object.joinOperation) : undefined,
       leaveOperation: isSet(object.leaveOperation) ? LeaveOperation.fromJSON(object.leaveOperation) : undefined,
@@ -1187,9 +1175,6 @@ export const Operation: MessageFns<Operation> = {
 
   toJSON(message: Operation): unknown {
     const obj: any = {};
-    if (message.playerID.length !== 0) {
-      obj.playerID = base64FromBytes(message.playerID);
-    }
     if (message.operationType !== 0) {
       obj.operationType = operationTypeToJSON(message.operationType);
     }
@@ -1216,7 +1201,6 @@ export const Operation: MessageFns<Operation> = {
   },
   fromPartial<I extends Exact<DeepPartial<Operation>, I>>(object: I): Operation {
     const message = createBaseOperation();
-    message.playerID = object.playerID ?? new Uint8Array(0);
     message.operationType = object.operationType ?? 0;
     message.joinOperation = (object.joinOperation !== undefined && object.joinOperation !== null)
       ? JoinOperation.fromPartial(object.joinOperation)
@@ -1238,11 +1222,17 @@ export const Operation: MessageFns<Operation> = {
 };
 
 function createBaseJoinOperation(): JoinOperation {
-  return {};
+  return { username: "", color: 0 };
 }
 
 export const JoinOperation: MessageFns<JoinOperation> = {
-  encode(_: JoinOperation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(message: JoinOperation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.username !== "") {
+      writer.uint32(10).string(message.username);
+    }
+    if (message.color !== 0) {
+      writer.uint32(16).uint32(message.color);
+    }
     return writer;
   },
 
@@ -1253,6 +1243,22 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.color = reader.uint32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1262,20 +1268,31 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     return message;
   },
 
-  fromJSON(_: any): JoinOperation {
-    return {};
+  fromJSON(object: any): JoinOperation {
+    return {
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
+      color: isSet(object.color) ? globalThis.Number(object.color) : 0,
+    };
   },
 
-  toJSON(_: JoinOperation): unknown {
+  toJSON(message: JoinOperation): unknown {
     const obj: any = {};
+    if (message.username !== "") {
+      obj.username = message.username;
+    }
+    if (message.color !== 0) {
+      obj.color = Math.round(message.color);
+    }
     return obj;
   },
 
   create<I extends Exact<DeepPartial<JoinOperation>, I>>(base?: I): JoinOperation {
     return JoinOperation.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<JoinOperation>, I>>(_: I): JoinOperation {
+  fromPartial<I extends Exact<DeepPartial<JoinOperation>, I>>(object: I): JoinOperation {
     const message = createBaseJoinOperation();
+    message.username = object.username ?? "";
+    message.color = object.color ?? 0;
     return message;
   },
 };

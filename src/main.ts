@@ -24,11 +24,13 @@ async function connectToServer(app: Application, world: Container, player: Playe
 
     // Verificación de conexión
     const checkConnection = setInterval(() => {
-      if (!network.isConnected) {
+      if (!network.isConnected()) {
         console.warn("⏳ Esperando conexión...");
       } else {
         clearInterval(checkConnection);
         console.log("🟢 Conexión establecida");
+        console.log("sending join")
+        network.sendJoin();
       }
     }, 500);
 
@@ -61,22 +63,24 @@ async function connectToServer(app: Application, world: Container, player: Playe
       .stroke({ width: 4, color: 0xff0000 }); // Rojo para mejor visibilidad
     world.addChild(worldBounds);
 
+
+    // 👤 4. Mostrar nombre de usuario encima del jugador
+    const username = getCookie("username") || "Jugador";
+    console.log("👤 Nombre leído desde cookie:", username);
+
     // Creamos el contenedor del jugador
     const playerContainer = new Container();
 
     const player = new Player(
       WORLD_SIZE,
       undefined,
+      username,
       WORLD_SIZE.width / 2, WORLD_SIZE.height / 2,
       30,
       0x44bb44
     );
     playerContainer.addChild(player);
     //world.addChild(player);
-
-    // 👤 4. Mostrar nombre de usuario encima del jugador
-    const username = getCookie("username") || "Desconocido";
-    console.log("👤 Nombre leído desde cookie:", username);
 
     const nameText = new Text(username, new TextStyle({
       fontSize: 16,

@@ -5,14 +5,16 @@ export class Player extends Graphics {
   private velocityMagnitude = 10;
   public id: Uint8Array | undefined;
   public radius: number;
-  private color: number;
+  public color: number;
+  public username: string;
   public pos: { x: number; y: number };
   private worldBounds: WorldBounds;
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array | undefined, x: number, y: number, radius: number, color: number) {
-    super();
+  constructor(worldBounds: WorldBounds, id: Uint8Array | undefined, username: string, x: number, y: number, radius: number, color: number) {
+      super();
       this.worldBounds = worldBounds;
       this.id = id;
+      this.username = username;
       this.radius = radius;
       this.color = color;
       this.pos = { x, y };
@@ -28,10 +30,11 @@ export class Player extends Graphics {
   }
 
   // Actualización desde el servidor
-  public updateFromServer(x: number, y: number, radius: number) {
+  public updateFromServer(x: number, y: number, radius: number, skin: number) {
     this.pos.x = x;
       this.pos.y = y;
       this.radius = radius;
+      this.color = skin;
       this.draw();
   }
 
