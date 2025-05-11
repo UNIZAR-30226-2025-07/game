@@ -3,255 +3,265 @@ import { GalaxyClient } from './GalaxyClient';
 import * as Galaxy from '../proto/galaxy';
 import { Player } from '../src/player';
 import { Food, createFoodFromServer } from '../src/food';
-import { Bot } from '../src/bot';
 import { Application, Container } from 'pixi.js';
 
 const WORLD_SIZE = { width: 10000, height: 10000 };
 
+type IDHash = number & { readonly __brand: "IDHash" };
+
+function hashID(id: Uint8Array): IDHash {
+  let hash = 5381; // DJB2 initial value
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 33) ^ id[i]; // DJB2 hash formula
+  }
+  return hash >>> 0 as IDHash; // Ensure the hash is a non-negative integer
+}
+
 export class NetworkManager {
-    private client: GalaxyClient;
-    private player: Player;
-    private world: Container;
-    private app: Application;
-    
-    // Entidades del juego
-    public foods: Food[] = [];
-    public players = new Map<string, Player>();
-    public bots = new Map<string, Bot>();
+  private client: GalaxyClient;
+  private player: Player;
+  private world: Container;
+  private app: Application;
+  private oldPos: Galaxy.Vector2D | undefined;
 
-    constructor(app: Application, world: Container, player: Player, serverUrl: string) {
-        this.app = app;
-        this.world = world;
-        this.player = player;
-        this.client = new GalaxyClient(serverUrl);
+  // Entidades del juego
+  public foods: Food[] = [];
+  public players = new Map<IDHash, Player>();
 
-        this.setupEventHandlers();
-        this.sendJoinRequest();
-    }
+  constructor(app: Application, world: Container, player: Player, serverUrl: string) {
+    this.app = app;
+    this.world = world;
+    this.player = player;
+    this.client = new GalaxyClient(serverUrl);
 
-    private setupEventHandlers() {
-        this.client.onEvent((event) => {
-            try {
-                switch (event.eventType) {
-                    case Galaxy.EventType.EvNewPlayer:
-                        if (event.eventData?.$case === "newPlayerEvent") {
-                            this.handleNewPlayer({
-                                playerID: event.eventData.newPlayerEvent.playerID,
-                                position: event.eventData.newPlayerEvent.position,
-                                radius: event.eventData.newPlayerEvent.radius,
-                                color: event.eventData.newPlayerEvent.color
-                            });
-                        }
-                        break;
-                    case Galaxy.EventType.EvPlayerMove:
-                        if (event.eventData?.$case === "playerMoveEvent") {
-                            this.handlePlayerMove({
-                                playerID: event.eventData.playerMoveEvent.playerID,
-                                position: event.eventData.playerMoveEvent.position
-                            });
-                        }
-                        break;
-                    case Galaxy.EventType.EvNewFood:
-                        if (event.eventData?.$case === "newFoodEvent") {
-                            this.handleNewFood({
-                                position: event.eventData.newFoodEvent.position,
-                                color: event.eventData.newFoodEvent.color
-                            });
-                        }
-                        break;
-                    case Galaxy.EventType.EvPlayerGrow:
-                        if (event.eventData?.$case === "playerGrowEvent") {
-                            this.handlePlayerGrow({
-                                playerID: event.eventData.playerGrowEvent.playerID,
-                                radius: event.eventData.playerGrowEvent.radius
-                            });
-                        }
-                        break;
-                    case Galaxy.EventType.EvDestroyFood:
-                        if (event.eventData?.$case === "destroyFoodEvent") {
-                            this.handleDestroyFood({
-                                position: event.eventData.destroyFoodEvent.position!
-                            });
-                        }
-                        break;
-                    case Galaxy.EventType.EvDestroyPlayer:
-                        if (event.eventData?.$case === "destroyPlayerEvent") {
-                            this.handleDestroyPlayer({
-                                playerID: event.eventData.destroyPlayerEvent.playerID
-                            });
-                        }
-                        break;
-                }
-            } catch (err) {
-                console.error("Error processing event:", err);
-            }
-        });
-    }
+    this.setupEventHandlers();
+  }
 
-    private sendJoinRequest() {
-        const op: Galaxy.Operation = {
-            playerID: this.player.id,
-            operationType: Galaxy.OperationType.OpJoin,
-            operationData: {
-                $case: "joinOperation",
-                joinOperation: {}  // JoinOperation vacío si no tiene campos
-            }
-        };
-        this.client.sendOperation(op);
-    }
-    
-    public sendMovement(x: number, y: number) {
-        const worldPos = this.screenToWorld(x, y);
-        
-        const op: Galaxy.Operation = {
-            playerID: this.player.id,
-            operationType: Galaxy.OperationType.OpMove,
-            operationData: {
-                $case: "moveOperation",
-                moveOperation: { position: worldPos }
-            }
-        };
-        this.client.sendOperation(op);
-    }
-    
-    public sendEatFood(foodPos: {X: number, Y: number}, newRadius: number) {
-        const op: Galaxy.Operation = {
-            playerID: this.player.id,
-            operationType: Galaxy.OperationType.OpEatFood,
-            operationData: {
-                $case: "eatFoodOperation",
-                eatFoodOperation: {
-                    foodPosition: foodPos,
-                    newRadius: newRadius
-                }
-            }
-        };
-        this.client.sendOperation(op);
-    }
+  public isConnected() {
+    return this.client.isConnected;
+  }
 
-    /**
-     * Enviar operación de abandono del juego
-     */
-    public sendLeave() {
-        const op: Galaxy.Operation = {
-            playerID: this.player.id,
-            operationType: Galaxy.OperationType.OpLeave,
-            operationData: {
-                $case: "leaveOperation",
-                leaveOperation: {} // Sin datos adicionales
-            }
-        };
-        this.client.sendOperation(op);
-    }
-
-    /**
-     * Enviar operación de comer jugador
-     * @param eatenPlayerId ID del jugador comido
-     * @param newRadius Nuevo radio después de comer
-     */
-    public sendEatPlayer(eatenPlayerId: Uint8Array, newRadius: number) {
-        const op: Galaxy.Operation = {
-            playerID: this.player.id,
-            operationType: Galaxy.OperationType.OpEatPlayer,
-            operationData: {
-                $case: "eatPlayerOperation",
-                eatPlayerOperation: {
-                    playerEaten: eatenPlayerId,
-                    newRadius: newRadius
-                }
-            }
-        };
-        this.client.sendOperation(op);
-    }
-
-
-    private screenToWorld(screenX: number, screenY: number): Galaxy.Vector2D {
-        return {
-            X: (screenX - this.world.x) / this.world.scale.x,
-            Y: (screenY - this.world.y) / this.world.scale.y
-        };
-    }
-
-    // Handlers de eventos
-    private handleNewPlayer(event: Galaxy.NewPlayerEvent) {
-        if (this.isCurrentPlayer(event.playerID)) return;
-
-        const player = new Player(
-            WORLD_SIZE,
-            event.playerID,
-            event.position!.X,
-            event.position!.Y,
-            event.radius,
-            event.color
-        );
-        
-        this.players.set(this.idToString(event.playerID), player);
-        this.world.addChild(player);
-    }
-
-    private handlePlayerMove(event: Galaxy.PlayerMoveEvent) {
-        const playerId = this.idToString(event.playerID);
-        
-        if (this.isCurrentPlayer(event.playerID)) {
-            this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius);
-        } else if (this.players.has(playerId)) {
-            const player = this.players.get(playerId)!;
-            player.updateFromServer(event.position!.X, event.position!.Y, player.radius);
+  private setupEventHandlers() {
+    this.client.onEvent((event) => {
+      try {
+        switch (event.eventType) {
+          case Galaxy.EventType.EvNewPlayer:
+            this.handleNewPlayer({
+              playerID: event.newPlayerEvent.playerID,
+              position: event.newPlayerEvent.position,
+              radius: event.newPlayerEvent.radius,
+              color: event.newPlayerEvent.color
+            });
+            break;
+          case Galaxy.EventType.EvJoin:
+            this.handleJoin({
+              playerID: event.joinEvent.playerID,
+              position: event.joinEvent.position,
+              radius: event.joinEvent.radius,
+              color: event.joinEvent.color
+            });
+            break;
+          case Galaxy.EventType.EvPlayerMove:
+            this.handlePlayerMove({
+              playerID: event.playerMoveEvent.playerID,
+              position: event.playerMoveEvent.position
+            });
+            break;
+          case Galaxy.EventType.EvNewFood:
+            this.handleNewFood({
+              position: event.newFoodEvent.position,
+              color: event.newFoodEvent.color
+            });
+            break;
+          case Galaxy.EventType.EvPlayerGrow:
+            this.handlePlayerGrow({
+              playerID: event.playerGrowEvent.playerID,
+              radius: event.playerGrowEvent.radius
+            })
+            break;
+          case Galaxy.EventType.EvDestroyFood:
+            this.handleDestroyFood({
+              position: event.destroyFoodEvent.position!
+            });
+            break;
+          case Galaxy.EventType.EvDestroyPlayer:
+            this.handleDestroyPlayer({
+              playerID: event.destroyPlayerEvent.playerID
+            });
+            break;
+          case Galaxy.EventType.EvUnused:
+            this.handleDestroyPlayer({
+              playerID: event.destroyPlayerEvent.playerID
+            });
+            break;
         }
+      } catch (err) {
+        console.error("Error processing event:", err);
+      }
+    });
+  }
+
+  private positionDelta(a: Galaxy.Vector2D | undefined, b: Galaxy.Vector2D | undefined): number {
+    if (a === undefined || b === undefined) {
+      return 999999
+    }
+    const deltaX = a.X - b.X;
+    const deltaY = a.Y - b.Y;
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+  }
+
+  public sendMovement(x: number, y: number) {
+    let vector = { X: Math.floor(x), Y: Math.floor(y) }
+    if (this.positionDelta(vector, this.oldPos) < 5) {
+      return
     }
 
-    private handleNewFood(event: Galaxy.NewFoodEvent) {
-        const food = createFoodFromServer({
-            position: { X: event.position!.X, Y: event.position!.Y },
-            color: event.color
-        });
-        this.foods.push(food);
-        this.world.addChild(food);
-    }
+    this.oldPos = vector;
 
-    private handlePlayerGrow(event: Galaxy.PlayerGrowEvent) {
-        const playerId = this.idToString(event.playerID);
-        
-        if (this.isCurrentPlayer(event.playerID)) {
-            this.player.radius = event.radius;
-        } else if (this.players.has(playerId)) {
-            this.players.get(playerId)!.radius = event.radius;
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpMove,
+        moveOperation: { position: vector }
+    };
+    this.client.sendOperation(op);
+  }
+
+  public sendEatFood(foodPos: { X: number, Y: number }, newRadius: number) {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpEatFood,
+      eatFoodOperation: {
+        foodPosition: foodPos,
+        newRadius: Math.floor(newRadius)
+      }
+    };
+    this.client.sendOperation(op);
+  }
+
+  /**
+   * Enviar operación de join al server
+   */
+  public sendJoin() {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpJoin,
+      joinOperation: {
+        username: this.player.username,
+        color: this.player.color
+      }
+    };
+    this.client.sendOperation(op);
+  }
+
+  /**
+   * Enviar operación de abandono del juego
+   */
+  public sendLeave() {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpLeave,
+        leaveOperation: {} // Sin datos adicionales
+    };
+    this.client.sendOperation(op);
+  }
+
+  /**
+   * Enviar operación de comer jugador
+   * @param eatenPlayerId ID del jugador comido
+   * @param newRadius Nuevo radio después de comer
+   */
+  public sendEatPlayer(eatenPlayerId: Uint8Array, newRadius: number) {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpEatPlayer,
+        eatPlayerOperation: {
+          playerEaten: eatenPlayerId,
+          newRadius: Math.floor(newRadius)
         }
-    }
+    };
+    this.client.sendOperation(op);
+  }
 
-    private handleDestroyFood(event: Galaxy.DestroyFoodEvent) {
-        const index = this.foods.findIndex(f => 
-            f.pos.x === event.position!.X && 
-            f.pos.y === event.position!.Y
-        );
-        
-        if (index !== -1) {
-            this.world.removeChild(this.foods[index]);
-            this.foods[index].destroy();
-            this.foods.splice(index, 1);
-        }
-    }
+  // Handlers de eventos
+  private handleJoin(event: Galaxy.NewPlayerEvent) {
+    console.log("registering me", event)
+    this.player.id = event.playerID;
+    this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color)
+    return
+  }
 
-    private handleDestroyPlayer(event: Galaxy.DestroyPlayerEvent) {
-        const playerId = this.idToString(event.playerID);
-        
-        if (this.players.has(playerId)) {
-            const player = this.players.get(playerId)!;
-            this.world.removeChild(player);
-            player.destroy();
-            this.players.delete(playerId);
-        }
-    }
+  private handleNewPlayer(event: Galaxy.NewPlayerEvent) {
+    console.log("new player", event)
+    const playerID = hashID(event.playerID);
+    if (this.isCurrentPlayer(playerID)) return;
 
-    private isCurrentPlayer(playerId: Uint8Array): boolean {
-        return this.idToString(playerId) === this.idToString(this.player.id);
-    }
+    const player = new Player(
+      WORLD_SIZE,
+      event.playerID,
+      "tobeimplemented",
+      event.position!.X,
+      event.position!.Y,
+      event.radius,
+      event.color
+    );
 
-    private idToString(id: Uint8Array): string {
-        return Array.from(id).join('-');
-    }
+    this.players.set(playerID, player);
+    this.world.addChild(player);
+  }
 
-    public close() {
-        this.client.close();
+  private handlePlayerMove(event: Galaxy.PlayerMoveEvent) {
+    const playerID = hashID(event.playerID);
+    if (this.isCurrentPlayer(playerID)) {
+      this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius, this.player.color);
+    } else if (this.players.has(playerID)) {
+      const player = this.players.get(playerID)!;
+      player.updateFromServer(event.position!.X, event.position!.Y, player.radius, player.color);
     }
+  }
+
+  private handleNewFood(event: Galaxy.NewFoodEvent) {
+    const food = createFoodFromServer({
+      position: { X: event.position!.X, Y: event.position!.Y },
+      color: event.color
+    });
+    this.foods.push(food);
+    this.world.addChild(food);
+  }
+
+  private handlePlayerGrow(event: Galaxy.PlayerGrowEvent) {
+    const playerID = hashID(event.playerID);
+    if (this.isCurrentPlayer(playerID)) {
+      this.player.updateRadiusFromServer(event.radius);
+    } else if (this.players.has(playerID)) {
+      this.players.get(playerID)?.updateRadiusFromServer(event.radius);
+    } else {
+      console.log("nobody", event, this.players, this.player)
+    }
+  }
+
+  private handleDestroyFood(event: Galaxy.DestroyFoodEvent) {
+    const index = this.foods.findIndex(f =>
+      f.pos.x === event.position!.X &&
+      f.pos.y === event.position!.Y
+    );
+
+    if (index !== -1) {
+      this.world.removeChild(this.foods[index]);
+      this.foods[index].destroy();
+      this.foods.splice(index, 1);
+    }
+  }
+
+  private handleDestroyPlayer(event: Galaxy.DestroyPlayerEvent) {
+    const playerID = hashID(event.playerID);
+    if (this.players.has(playerID)) {
+      const player = this.players.get(playerID)!;
+      player.destroy();
+      this.players.delete(playerID);
+    }
+  }
+
+  private isCurrentPlayer(playerId: IDHash): boolean {
+    if (this.player.id === undefined) return false;
+    return playerId === hashID(this.player.id);
+  }
+
+  public close() {
+    this.client.close();
+  }
 }

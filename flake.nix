@@ -11,6 +11,8 @@
         buildInputs = with pkgs; [
           nodejs_22
           pnpm
+          protobuf
+          protoc-gen-js
         ];
         shellHook = ''
           zsh

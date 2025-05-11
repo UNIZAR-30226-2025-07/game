@@ -9,8 +9,6 @@ export enum FoodColor {
   Yellow = 0x00ff00,
 }
 
-const FOOD_COLORS = [FoodColor.Red, FoodColor.Blue, FoodColor.Yellow];
-
 export class Food extends Graphics {
   public pos: { x: number; y: number };
 
