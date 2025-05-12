@@ -105,8 +105,6 @@ export class Player extends Container {
     this.graphics.drawCircle(0, 0, this.radius);
     this.graphics.endFill();
 
-    console.log("🎨 Círculo dibujado con color:", this.color);
-
     // // Actualizar posición del nombre según el tamaño del jugador
     this.nameText.position.set(0, this.radius + 70);
     //
@@ -116,8 +114,6 @@ export class Player extends Container {
 
   // Actualización desde el servidor
   public async updateFromServer(x: number, y: number, radius: number, color: number, skin: string, username?: string) {
-    console.log("📌 Actualizando jugador:", { x, y, radius, color, skin, username });
-
     this.pos.x = x;
     this.pos.y = y;
     this.radius = radius;

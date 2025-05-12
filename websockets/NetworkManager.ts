@@ -23,16 +23,18 @@ export class NetworkManager {
   private world: Container;
   private app: Application;
   private oldPos: Galaxy.Vector2D | undefined;
+  private gameID: number | undefined;
 
   // Entidades del juego
   public foods: Food[] = [];
   public players = new Map<IDHash, Player>();
 
-  constructor(app: Application, world: Container, player: Player, serverUrl: string) {
+  constructor(app: Application, world: Container, player: Player, serverUrl: string, gameID: number | undefined) {
     this.app = app;
     this.world = world;
     this.player = player;
     this.client = new GalaxyClient(serverUrl);
+    this.gameID = gameID;
 
     this.setupEventHandlers();
   }
@@ -148,7 +150,8 @@ export class NetworkManager {
         playerID: this.player.id,
         username: this.player.username,
         color: this.player.color,
-        skin: this.player.skin
+        skin: this.player.skin,
+        gameID: this.gameID ?? 0,
       }
     };
     console.log(op);
