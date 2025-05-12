@@ -129,8 +129,8 @@ async function connectToServer(app: Application, world: Container, player: Playe
     const playerContainer = new Container();
 
     // Obtener nombre de usuario y skin desde cookies
-    const username = getCookie("username") || "Desconocido";
-    const skin = getCookie("skin") || "";
+    const username = getCookie("username") ?? "Desconocido";
+    const skin = getCookie("skin") ?? "Aspecto Básico.png";
     const playerIDcookie = getCookie("PlayerID"); 
     const leaderID = getCookie("LeaderID");
     const gameIdStr = getCookie("gameId");

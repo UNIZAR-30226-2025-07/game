@@ -15,7 +15,7 @@ export class Player extends Container {
   public username: string; // Nombre del jugador
   isLeader: boolean = false;
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, isLeader: boolean, username: string = "Desconocido") {
+  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string, isLeader: boolean) {
     super();
     this.worldBounds = worldBounds;
     this.id = id;
