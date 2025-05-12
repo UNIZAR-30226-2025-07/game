@@ -234,7 +234,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
     window.addEventListener('keydown', (event) => {
         if (event.key.toLowerCase() === 'p') {
           if (network.isConnected()) {
-            network.sendPauseEvent();
+            network.sendPause();
             console.log("🎮 Enviando evento de pausa al servidor");
           }
         }

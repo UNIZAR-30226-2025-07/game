@@ -68,6 +68,9 @@ export class NetworkManager {
         if (event.destroyPlayerEvent) {
           this.handleDestroyPlayer(event.destroyPlayerEvent)
         }
+        if (event.pauseEvent) {
+          this.handlePause()
+        }
       } catch (err) {
         console.log("Error processing event: ",err);
       }
@@ -136,6 +139,15 @@ export class NetworkManager {
       operationType: Galaxy.OperationType.OpLeave,
         leaveOperation: {} // Sin datos adicionales
     };
+    this.client.sendOperation(op);
+  }
+
+  public sendPause() {
+    const op: Galaxy.Operation = {
+      operationType: Galaxy.OperationType.OpPause,
+      pauseOperation: {}
+    };
+
     this.client.sendOperation(op);
   }
 
@@ -241,6 +253,10 @@ export class NetworkManager {
       player.destroy();
       this.players.delete(playerID);
     }
+  }
+
+  private handlePause() {
+    window.location.href = '/paused'
   }
 
   private isCurrentPlayer(playerId: IDHash): boolean {
