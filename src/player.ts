@@ -26,7 +26,7 @@ export class Player extends Container {
     this.velocityMagnitude = 5; // Valor inicial para la velocidad
     this.username = username;
     this.skin = skin;
-   this.isLeader = isLeader;
+    this.isLeader = isLeader;
 
     // Crear el objeto Graphics para dibujar el jugador
     this.graphics = new Graphics();
@@ -77,7 +77,7 @@ export class Player extends Container {
 
       // Posicionar la skin en el centro del contenedor (0,0)
       this.skinSprite.position.set(0, 0);
-      this.skinSprite.scale.set(this.radius / 100, this.radius / 100); // Ajustar el tamaño de la skin según el radio
+      this.skinSprite.scale.set(this.radius / 250, this.radius / 250); // Ajustar el tamaño de la skin según el radio
 
       console.log("✅ Skin actualizada correctamente");
     } catch (e) {
