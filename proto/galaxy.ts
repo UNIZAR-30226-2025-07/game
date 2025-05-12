@@ -204,6 +204,7 @@ export interface JoinOperation {
   username: string;
   color: number;
   skin: string;
+  gameID: number;
 }
 
 export interface LeaveOperation {
@@ -1258,7 +1259,7 @@ export const Operation: MessageFns<Operation> = {
 };
 
 function createBaseJoinOperation(): JoinOperation {
-  return { playerID: new Uint8Array(0), username: "", color: 0, skin: "" };
+  return { playerID: new Uint8Array(0), username: "", color: 0, skin: "", gameID: 0 };
 }
 
 export const JoinOperation: MessageFns<JoinOperation> = {
@@ -1274,6 +1275,9 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     }
     if (message.skin !== "") {
       writer.uint32(34).string(message.skin);
+    }
+    if (message.gameID !== 0) {
+      writer.uint32(40).uint32(message.gameID);
     }
     return writer;
   },
@@ -1317,6 +1321,14 @@ export const JoinOperation: MessageFns<JoinOperation> = {
           message.skin = reader.string();
           continue;
         }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.gameID = reader.uint32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1332,6 +1344,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
       username: isSet(object.username) ? globalThis.String(object.username) : "",
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
       skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
+      gameID: isSet(object.gameID) ? globalThis.Number(object.gameID) : 0,
     };
   },
 
@@ -1349,6 +1362,9 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     if (message.skin !== "") {
       obj.skin = message.skin;
     }
+    if (message.gameID !== 0) {
+      obj.gameID = Math.round(message.gameID);
+    }
     return obj;
   },
 
@@ -1361,6 +1377,7 @@ export const JoinOperation: MessageFns<JoinOperation> = {
     message.username = object.username ?? "";
     message.color = object.color ?? 0;
     message.skin = object.skin ?? "";
+    message.gameID = object.gameID ?? 0;
     return message;
   },
 };
