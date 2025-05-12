@@ -38,7 +38,7 @@ function getCookie(name: string): string | null {
 }
 
 // 1. Función de conexión mejorada
-async function connectToServer(app: Application, world: Container, player: Player) {
+async function connectToServer(app: Application, world: Container, player: Player, gameId?: number) {
   const wsUrl = window.location.hostname === 'localhost'
     ? 'ws://localhost:8080/ws'
     : `wss://${window.location.host}/ws`;
@@ -46,7 +46,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
   console.log("🔗 Conectando a:", wsUrl);
 
   try {
-    const network = new NetworkManager(app, world, player, wsUrl);
+    const network = new NetworkManager(app, world, player, wsUrl, gameId);
 
     // Verificación de conexión
     const checkConnection = setInterval(() => {
@@ -132,6 +132,9 @@ async function connectToServer(app: Application, world: Container, player: Playe
     const username = getCookie("username") || "Desconocido";
     const skin = getCookie("skin") || "";
     const playerIDcookie = getCookie("PlayerID"); 
+    const leaderID = getCookie("LeaderID");
+    const gameIdStr = getCookie("gameId");
+    const gameId = gameIdStr ? parseInt(gameIdStr, 10) : undefined;
     if (playerIDcookie == null) {
       console.log("playerID not specified");
       return
@@ -141,6 +144,16 @@ async function connectToServer(app: Application, world: Container, player: Playe
       console.log("error parsing playerID: ", playerIDcookie);
       return
     }
+    // Validar que gameId sea un número válido si existe
+    if (gameIdStr && isNaN(gameId!)) {
+        console.log("Error: gameId no es un número válido:", gameIdStr);
+        return;
+    }
+
+
+    // Determinar si es una partida privada y si el jugador es líder
+    const isLeader = playerIDcookie === leaderID;
+
     console.log("Nombre leído desde cookie:", username);
     console.log("PlayerID leído desde cookie:", playerID);
 
@@ -153,7 +166,8 @@ async function connectToServer(app: Application, world: Container, player: Playe
       30,
       0x44bb44,
       skin,
-      username
+      username,
+      isLeader
     );
 
     // Agregamos el contenedor al mundo
@@ -163,7 +177,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
     world.addChild(player);
 
     // 5. Conexión mejorada
-    const network = await connectToServer(app, world, player);
+    const network = await connectToServer(app, world, player, gameId);
 
     // 6. Game loop con protección
     app.ticker.add(() => {
