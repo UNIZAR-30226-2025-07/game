@@ -145,6 +145,7 @@ export class NetworkManager {
     const op: Galaxy.Operation = {
       operationType: Galaxy.OperationType.OpJoin,
       joinOperation: {
+        playerID: this.player.id,
         username: this.player.username,
         color: this.player.color,
         skin: this.player.skin
