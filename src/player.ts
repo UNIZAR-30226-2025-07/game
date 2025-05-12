@@ -13,8 +13,9 @@ export class Player extends Container {
   private velocityMagnitude: number;
   private nameText: Text; // Texto para el nombre del jugador
   public username: string; // Nombre del jugador
+  isLeader: boolean = false;
 
-  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string = "Desconocido") {
+  constructor(worldBounds: WorldBounds, id: Uint8Array, x: number, y: number, radius: number, color: number, skin: string, username: string, isLeader: boolean) {
     super();
     this.worldBounds = worldBounds;
     this.id = id;
@@ -25,6 +26,7 @@ export class Player extends Container {
     this.velocityMagnitude = 5; // Valor inicial para la velocidad
     this.username = username;
     this.skin = skin;
+   this.isLeader = isLeader;
 
     // Crear el objeto Graphics para dibujar el jugador
     this.graphics = new Graphics();

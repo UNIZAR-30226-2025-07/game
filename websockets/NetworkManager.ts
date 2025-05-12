@@ -177,6 +177,8 @@ export class NetworkManager {
       event.radius,
       event.color,
       event.skin,
+      event.username,
+      false
     );
 
     this.players.set(playerID, player);
