@@ -18,6 +18,7 @@ export enum EventType {
   EvDestroyFood = 5,
   EvDestroyPlayer = 6,
   EvJoin = 7,
+  EvPause = 8,
   UNRECOGNIZED = -1,
 }
 
@@ -47,6 +48,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 7:
     case "EvJoin":
       return EventType.EvJoin;
+    case 8:
+    case "EvPause":
+      return EventType.EvPause;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -72,6 +76,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "EvDestroyPlayer";
     case EventType.EvJoin:
       return "EvJoin";
+    case EventType.EvPause:
+      return "EvPause";
     case EventType.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
@@ -85,6 +91,7 @@ export enum OperationType {
   OpMove = 3,
   OpEatPlayer = 4,
   OpEatFood = 5,
+  OpPause = 6,
   UNRECOGNIZED = -1,
 }
 
@@ -108,6 +115,9 @@ export function operationTypeFromJSON(object: any): OperationType {
     case 5:
     case "OpEatFood":
       return OperationType.OpEatFood;
+    case 6:
+    case "OpPause":
+      return OperationType.OpPause;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -129,6 +139,8 @@ export function operationTypeToJSON(object: OperationType): string {
       return "OpEatPlayer";
     case OperationType.OpEatFood:
       return "OpEatFood";
+    case OperationType.OpPause:
+      return "OpPause";
     case OperationType.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
@@ -149,6 +161,7 @@ export interface Event {
   destroyFoodEvent?: DestroyFoodEvent | undefined;
   destroyPlayerEvent?: DestroyPlayerEvent | undefined;
   joinEvent?: JoinEvent | undefined;
+  pauseEvent?: PauseEvent | undefined;
 }
 
 export interface NewPlayerEvent {
@@ -191,6 +204,9 @@ export interface DestroyPlayerEvent {
   playerID: Uint8Array;
 }
 
+export interface PauseEvent {
+}
+
 export interface Operation {
   operationType: OperationType;
   joinOperation?: JoinOperation | undefined;
@@ -198,6 +214,7 @@ export interface Operation {
   moveOperation?: MoveOperation | undefined;
   eatPlayerOperation?: EatPlayerOperation | undefined;
   eatFoodOperation?: EatFoodOperation | undefined;
+  pauseOperation?: PauseOperation | undefined;
 }
 
 export interface JoinOperation {
@@ -223,6 +240,9 @@ export interface EatPlayerOperation {
 export interface EatFoodOperation {
   foodPosition: Vector2D | undefined;
   newRadius: number;
+}
+
+export interface PauseOperation {
 }
 
 function createBaseVector2D(): Vector2D {
@@ -311,6 +331,7 @@ function createBaseEvent(): Event {
     destroyFoodEvent: undefined,
     destroyPlayerEvent: undefined,
     joinEvent: undefined,
+    pauseEvent: undefined,
   };
 }
 
@@ -339,6 +360,9 @@ export const Event: MessageFns<Event> = {
     }
     if (message.joinEvent !== undefined) {
       JoinEvent.encode(message.joinEvent, writer.uint32(66).fork()).join();
+    }
+    if (message.pauseEvent !== undefined) {
+      PauseEvent.encode(message.pauseEvent, writer.uint32(74).fork()).join();
     }
     return writer;
   },
@@ -414,6 +438,14 @@ export const Event: MessageFns<Event> = {
           message.joinEvent = JoinEvent.decode(reader, reader.uint32());
           continue;
         }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.pauseEvent = PauseEvent.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -435,6 +467,7 @@ export const Event: MessageFns<Event> = {
         ? DestroyPlayerEvent.fromJSON(object.destroyPlayerEvent)
         : undefined,
       joinEvent: isSet(object.joinEvent) ? JoinEvent.fromJSON(object.joinEvent) : undefined,
+      pauseEvent: isSet(object.pauseEvent) ? PauseEvent.fromJSON(object.pauseEvent) : undefined,
     };
   },
 
@@ -463,6 +496,9 @@ export const Event: MessageFns<Event> = {
     }
     if (message.joinEvent !== undefined) {
       obj.joinEvent = JoinEvent.toJSON(message.joinEvent);
+    }
+    if (message.pauseEvent !== undefined) {
+      obj.pauseEvent = PauseEvent.toJSON(message.pauseEvent);
     }
     return obj;
   },
@@ -493,6 +529,9 @@ export const Event: MessageFns<Event> = {
       : undefined;
     message.joinEvent = (object.joinEvent !== undefined && object.joinEvent !== null)
       ? JoinEvent.fromPartial(object.joinEvent)
+      : undefined;
+    message.pauseEvent = (object.pauseEvent !== undefined && object.pauseEvent !== null)
+      ? PauseEvent.fromPartial(object.pauseEvent)
       : undefined;
     return message;
   },
@@ -1116,6 +1155,49 @@ export const DestroyPlayerEvent: MessageFns<DestroyPlayerEvent> = {
   },
 };
 
+function createBasePauseEvent(): PauseEvent {
+  return {};
+}
+
+export const PauseEvent: MessageFns<PauseEvent> = {
+  encode(_: PauseEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PauseEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePauseEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): PauseEvent {
+    return {};
+  },
+
+  toJSON(_: PauseEvent): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PauseEvent>, I>>(base?: I): PauseEvent {
+    return PauseEvent.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PauseEvent>, I>>(_: I): PauseEvent {
+    const message = createBasePauseEvent();
+    return message;
+  },
+};
+
 function createBaseOperation(): Operation {
   return {
     operationType: 0,
@@ -1124,6 +1206,7 @@ function createBaseOperation(): Operation {
     moveOperation: undefined,
     eatPlayerOperation: undefined,
     eatFoodOperation: undefined,
+    pauseOperation: undefined,
   };
 }
 
@@ -1146,6 +1229,9 @@ export const Operation: MessageFns<Operation> = {
     }
     if (message.eatFoodOperation !== undefined) {
       EatFoodOperation.encode(message.eatFoodOperation, writer.uint32(58).fork()).join();
+    }
+    if (message.pauseOperation !== undefined) {
+      PauseOperation.encode(message.pauseOperation, writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -1205,6 +1291,14 @@ export const Operation: MessageFns<Operation> = {
           message.eatFoodOperation = EatFoodOperation.decode(reader, reader.uint32());
           continue;
         }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.pauseOperation = PauseOperation.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1224,6 +1318,7 @@ export const Operation: MessageFns<Operation> = {
         ? EatPlayerOperation.fromJSON(object.eatPlayerOperation)
         : undefined,
       eatFoodOperation: isSet(object.eatFoodOperation) ? EatFoodOperation.fromJSON(object.eatFoodOperation) : undefined,
+      pauseOperation: isSet(object.pauseOperation) ? PauseOperation.fromJSON(object.pauseOperation) : undefined,
     };
   },
 
@@ -1246,6 +1341,9 @@ export const Operation: MessageFns<Operation> = {
     }
     if (message.eatFoodOperation !== undefined) {
       obj.eatFoodOperation = EatFoodOperation.toJSON(message.eatFoodOperation);
+    }
+    if (message.pauseOperation !== undefined) {
+      obj.pauseOperation = PauseOperation.toJSON(message.pauseOperation);
     }
     return obj;
   },
@@ -1270,6 +1368,9 @@ export const Operation: MessageFns<Operation> = {
       : undefined;
     message.eatFoodOperation = (object.eatFoodOperation !== undefined && object.eatFoodOperation !== null)
       ? EatFoodOperation.fromPartial(object.eatFoodOperation)
+      : undefined;
+    message.pauseOperation = (object.pauseOperation !== undefined && object.pauseOperation !== null)
+      ? PauseOperation.fromPartial(object.pauseOperation)
       : undefined;
     return message;
   },
@@ -1652,6 +1753,49 @@ export const EatFoodOperation: MessageFns<EatFoodOperation> = {
       ? Vector2D.fromPartial(object.foodPosition)
       : undefined;
     message.newRadius = object.newRadius ?? 0;
+    return message;
+  },
+};
+
+function createBasePauseOperation(): PauseOperation {
+  return {};
+}
+
+export const PauseOperation: MessageFns<PauseOperation> = {
+  encode(_: PauseOperation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PauseOperation {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePauseOperation();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): PauseOperation {
+    return {};
+  },
+
+  toJSON(_: PauseOperation): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PauseOperation>, I>>(base?: I): PauseOperation {
+    return PauseOperation.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PauseOperation>, I>>(_: I): PauseOperation {
+    const message = createBasePauseOperation();
     return message;
   },
 };
