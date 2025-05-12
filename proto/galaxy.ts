@@ -157,6 +157,7 @@ export interface NewPlayerEvent {
   radius: number;
   color: number;
   skin: string;
+  username: string;
 }
 
 export interface JoinEvent {
@@ -498,7 +499,7 @@ export const Event: MessageFns<Event> = {
 };
 
 function createBaseNewPlayerEvent(): NewPlayerEvent {
-  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0, skin: "" };
+  return { playerID: new Uint8Array(0), position: undefined, radius: 0, color: 0, skin: "", username: "" };
 }
 
 export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
@@ -517,6 +518,9 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
     }
     if (message.skin !== "") {
       writer.uint32(42).string(message.skin);
+    }
+    if (message.username !== "") {
+      writer.uint32(50).string(message.username);
     }
     return writer;
   },
@@ -568,6 +572,14 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
           message.skin = reader.string();
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.username = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -584,6 +596,7 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
       radius: isSet(object.radius) ? globalThis.Number(object.radius) : 0,
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
       skin: isSet(object.skin) ? globalThis.String(object.skin) : "",
+      username: isSet(object.username) ? globalThis.String(object.username) : "",
     };
   },
 
@@ -604,6 +617,9 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
     if (message.skin !== "") {
       obj.skin = message.skin;
     }
+    if (message.username !== "") {
+      obj.username = message.username;
+    }
     return obj;
   },
 
@@ -619,6 +635,7 @@ export const NewPlayerEvent: MessageFns<NewPlayerEvent> = {
     message.radius = object.radius ?? 0;
     message.color = object.color ?? 0;
     message.skin = object.skin ?? "";
+    message.username = object.username ?? "";
     return message;
   },
 };
