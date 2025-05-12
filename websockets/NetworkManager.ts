@@ -24,6 +24,7 @@ export class NetworkManager {
   private app: Application;
   private oldPos: Galaxy.Vector2D | undefined;
   private gameID: number | undefined;
+  private joined: boolean = false;
 
   // Entidades del juego
   public foods: Food[] = [];
@@ -46,61 +47,29 @@ export class NetworkManager {
   private setupEventHandlers() {
     this.client.onEvent((event) => {
       try {
-        switch (event.eventType) {
-          case Galaxy.EventType.EvNewPlayer:
-            this.handleNewPlayer({
-              playerID: event.newPlayerEvent!.playerID,
-              position: event.newPlayerEvent!.position,
-              radius: event.newPlayerEvent!.radius,
-              color: event.newPlayerEvent!.color,
-              skin: event.joinEvent!.skin,
-            });
-            break;
-          case Galaxy.EventType.EvJoin:
-            this.handleJoin({
-              playerID: event.joinEvent!.playerID,
-              position: event.joinEvent!.position,
-              radius: event.joinEvent!.radius,
-              color: event.joinEvent!.color,
-              skin: event.joinEvent!.skin,
-            });
-            break;
-          case Galaxy.EventType.EvPlayerMove:
-            this.handlePlayerMove({
-              playerID: event.playerMoveEvent!.playerID,
-              position: event.playerMoveEvent!.position
-            });
-            break;
-          case Galaxy.EventType.EvNewFood:
-            this.handleNewFood({
-              position: event.newFoodEvent!.position,
-              color: event.newFoodEvent!.color
-            });
-            break;
-          case Galaxy.EventType.EvPlayerGrow:
-            this.handlePlayerGrow({
-              playerID: event.playerGrowEvent!.playerID,
-              radius: event.playerGrowEvent!.radius
-            })
-            break;
-          case Galaxy.EventType.EvDestroyFood:
-            this.handleDestroyFood({
-              position: event.destroyFoodEvent!.position!
-            });
-            break;
-          case Galaxy.EventType.EvDestroyPlayer:
-            this.handleDestroyPlayer({
-              playerID: event.destroyPlayerEvent!.playerID
-            });
-            break;
-          case Galaxy.EventType.EvUnused:
-            this.handleDestroyPlayer({
-              playerID: event.destroyPlayerEvent!.playerID
-            });
-            break;
+        if (event.newPlayerEvent) {
+          this.handleNewPlayer(event.newPlayerEvent)
+        }
+        if (event.joinEvent) {
+          this.handleJoin(event.joinEvent)
+        }
+        if (event.playerMoveEvent) {
+          this.handlePlayerMove(event.playerMoveEvent)
+        }
+        if (event.newFoodEvent) {
+          this.handleNewFood(event.newFoodEvent)
+        }
+        if (event.playerGrowEvent) {
+          this.handlePlayerGrow(event.playerGrowEvent)
+        }
+        if (event.destroyFoodEvent) {
+          this.handleDestroyFood(event.destroyFoodEvent)
+        }
+        if (event.destroyPlayerEvent) {
+          this.handleDestroyPlayer(event.destroyPlayerEvent)
         }
       } catch (err) {
-        console.error("Error processing event:", err);
+        console.log("Error processing event: ",err);
       }
     });
   }
@@ -115,6 +84,7 @@ export class NetworkManager {
   }
 
   public sendMovement(x: number, y: number) {
+    if (!this.joined) return;
     let vector = { X: Math.floor(x), Y: Math.floor(y) }
     if (this.positionDelta(vector, this.oldPos) < 5) {
       return
@@ -186,10 +156,11 @@ export class NetworkManager {
   }
 
   // Handlers de eventos
-  private handleJoin(event: Galaxy.NewPlayerEvent) {
+  private handleJoin(event: Galaxy.JoinEvent) {
     console.log("registering me", event)
     this.player.id = event.playerID;
     this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color, event.skin)
+    this.joined = true;
     return
   }
 
@@ -254,11 +225,17 @@ export class NetworkManager {
       this.world.removeChild(this.foods[index]);
       this.foods[index].destroy();
       this.foods.splice(index, 1);
+    } else {
+      console.log("counldn't find food", event)
     }
   }
 
   private handleDestroyPlayer(event: Galaxy.DestroyPlayerEvent) {
     const playerID = hashID(event.playerID);
+    if (this.isCurrentPlayer(playerID)) {
+      // we are dead
+      window.location.href = '/dead'
+    }
     if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;
       player.destroy();
