@@ -237,8 +237,9 @@ async function connectToServer(app: Application, world: Container, player: Playe
             network.sendPause();
             console.log("🎮 Enviando evento de pausa al servidor");
           }
-        }
+        } 
       });
+     
 
     // 7. Manejo mejorado de cierre
     window.addEventListener('beforeunload', () => {
