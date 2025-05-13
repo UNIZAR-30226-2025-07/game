@@ -231,6 +231,8 @@ async function connectToServer(world: Container, player: Player, gameId?: number
           return
         }
 
+        if (!network.isConnected()) { return }
+
         const pointer = app.renderer.events.pointer;
 
         // Solo enviar movimiento si está conectado
@@ -253,7 +255,6 @@ async function connectToServer(world: Container, player: Player, gameId?: number
               player.eatPlayer(p);
               network.sendEatPlayer(p.id, player.radius)
             }
-            p.destroy()
           }
         })
 
