@@ -235,6 +235,7 @@ export class Player extends Container {
   }
 
   public lerpMove(x: number, y: number) {
+    if (this.destroyed) return;
     // const velocity = 1;
     // const dx = x - this.pos.x;
     // const dy = y - this.pos.y;
