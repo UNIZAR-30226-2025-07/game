@@ -274,7 +274,7 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     app.ticker.add(() => {
       try {
         if (player.destroyed) {
-          window.location.href = '/';
+          window.location.href = '/gameOver';
           return
         }
 
@@ -314,7 +314,7 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
         // Actualizar los textos de la clasificación
         sortedPlayers.forEach((p, index) => {
-            const score = Math.floor(p.radius * 100);
+            const score = Math.floor(p.radius / 10);
             const isCurrentPlayer = p === player;
             playerScores[index].text = `${index + 1}. ${p.username}: ${score}`;
             playerScores[index].style.fill = isCurrentPlayer ? 0x00ff00 : 0xffffff;
@@ -360,9 +360,9 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         // Suavizado de cámara
         let zoom = 1;
         if (player.radius < 80) {
-          zoom = Math.max(0.1, Math.min(1, 50 / Math.log(player.radius)));
+          zoom = Math.max(0.1, Math.min(1, 80 / Math.log(player.radius)));
         } else {
-          zoom = Math.max(0.1, Math.min(1, 100 / (player.radius - 80)));
+          zoom = Math.max(0.1, Math.min(1, 130 / (player.radius - 80)));
         }
 
         world.scale.set(
