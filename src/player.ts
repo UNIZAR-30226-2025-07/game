@@ -123,13 +123,23 @@ export class Player extends Container {
 
   // Actualización desde el servidor
   public async updateFromServer(x: number, y: number, radius: number, color: number, skin: string, username?: string) {
-    this.pos.x = x;
-    this.pos.y = y;
     this.radius = radius;
     this.color = color;
 
     // Actualizar posición del contenedor
-    this.position.set(x, y);
+    this.serverPos = {
+      x: x,
+      y: y
+    }
+
+    if (this.calculateServerPositionDelta() > 8000) {
+      // we are too far away, update
+      console.log("teleporting to serverPos")
+      this.pos = {
+        x: x,
+        y: y
+      }
+    }
 
     // Actualizar username si se proporciona
     if (username) {
@@ -224,6 +234,26 @@ export class Player extends Container {
     return delta
   }
 
+  public lerpMove(x: number, y: number) {
+    if (this.destroyed) return;
+    // const velocity = 1;
+    // const dx = x - this.pos.x;
+    // const dy = y - this.pos.y;
+    // const delta = Math.sqrt(dx * dx + dy * dy);
+
+    this.pos.x = x;
+    this.pos.y = y;
+
+    // Bound checking
+    this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
+    this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
+
+    // Actualizar la posición del contenedor completo
+    this.position.set(this.pos.x, this.pos.y);
+
+    this.draw();
+  }
+
   public moveTowards(screen: Rectangle, x: number, y: number): boolean {
     if (this.destroyed) return false;
     const dx = x - screen.width / 2;
@@ -253,9 +283,7 @@ export class Player extends Container {
     this.draw();
     // Don't send the move if the distance is minimal
     const serverDelta = this.calculateServerPositionDelta();
-    if (serverDelta > 25) {
-      console.log("updating position")
-      this.serverPos = {x: this.pos.x, y: this.pos.y}
+    if (serverDelta > 15) {
       return true;
     };
 

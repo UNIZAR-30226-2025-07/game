@@ -146,8 +146,6 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         leaderboardContainer.position.set(10, 10);
     });
 
-    // Añadir el texto directamente al stage (no al world)
-    app.stage.addChild(pauseHelpText);
 
     const world = new Container();
     // Para crear las estrellas del fondo
@@ -193,9 +191,12 @@ async function connectToServer(world: Container, player: Player, gameId?: number
       return;
     }
 
-
     // Determinar si es una partida privada y si el jugador es líder
     const isLeader = playerIDcookie === leaderID;
+
+    if (gameId && isLeader) {
+      app.stage.addChild(pauseHelpText);
+    }
 
     console.log("Nombre leído desde cookie:", username);
     console.log("PlayerID leído desde cookie:", playerID);
@@ -225,6 +226,11 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     // 6. Game loop con protección
     app.ticker.add(() => {
       try {
+        if (player.destroyed) {
+          window.location.href = '/';
+          return
+        }
+
         const pointer = app.renderer.events.pointer;
 
         // Solo enviar movimiento si está conectado
@@ -244,8 +250,8 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         network.players.forEach(p => {
           if (player.canEatPlayer(p)) {
             if (p.id !== undefined) {
-              network.sendEatPlayer(p.id, player.radius)
               player.eatPlayer(p);
+              network.sendEatPlayer(p.id, player.radius)
             }
             p.destroy()
           }
