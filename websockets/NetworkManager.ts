@@ -3,7 +3,7 @@ import { GalaxyClient } from './GalaxyClient';
 import * as Galaxy from '../proto/galaxy';
 import { Player } from '../src/player';
 import { Food, createFoodFromServer } from '../src/food';
-import { Application, Container } from 'pixi.js';
+import { Container } from 'pixi.js';
 
 const WORLD_SIZE = { width: 10000, height: 10000 };
 
@@ -21,7 +21,6 @@ export class NetworkManager {
   private client: GalaxyClient;
   private player: Player;
   private world: Container;
-  private app: Application;
   private oldPos: Galaxy.Vector2D | undefined;
   private gameID: number | undefined;
   private joined: boolean = false;
@@ -30,8 +29,7 @@ export class NetworkManager {
   public foods: Food[] = [];
   public players = new Map<IDHash, Player>();
 
-  constructor(app: Application, world: Container, player: Player, serverUrl: string, gameID: number | undefined) {
-    this.app = app;
+  constructor(world: Container, player: Player, serverUrl: string, gameID: number | undefined) {
     this.world = world;
     this.player = player;
     this.client = new GalaxyClient(serverUrl);

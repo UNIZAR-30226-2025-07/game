@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Application, Container, Graphics, Text  } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -38,15 +38,20 @@ function getCookie(name: string): string | null {
 }
 
 // 1. Función de conexión mejorada
-async function connectToServer(app: Application, world: Container, player: Player, gameId?: number) {
-  const wsUrl = window.location.hostname === 'localhost'
-    ? 'ws://localhost:8080/ws'
-    : `wss://${window.location.host}/ws`;
+async function connectToServer(world: Container, player: Player, gameId?: number) {
+  let wsUrl;
+  if (gameId) {
+    // private
+    wsUrl = `ws://${window.location.hostname}:4441/ws`;
+  } else {
+    // public
+    wsUrl = `ws://${window.location.hostname}:4440/ws`;
+  }
 
   console.log("🔗 Conectando a:", wsUrl);
 
   try {
-    const network = new NetworkManager(app, world, player, wsUrl, gameId);
+    const network = new NetworkManager(world, player, wsUrl, gameId);
 
     // Verificación de conexión
     const checkConnection = setInterval(() => {
@@ -88,7 +93,6 @@ async function connectToServer(app: Application, world: Container, player: Playe
         fill: 0xffffff,
         fontWeight: 'bold',
         stroke: 0x000000,
-        strokeThickness: 4,
     });
     
     // Posicionar el texto en la esquina superior derecha
@@ -177,7 +181,7 @@ async function connectToServer(app: Application, world: Container, player: Playe
     world.addChild(player);
 
     // 5. Conexión mejorada
-    const network = await connectToServer(app, world, player, gameId);
+    const network = await connectToServer(world, player, gameId);
 
     // 6. Game loop con protección
     app.ticker.add(() => {
