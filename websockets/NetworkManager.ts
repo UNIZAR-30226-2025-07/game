@@ -201,7 +201,7 @@ export class NetworkManager {
       this.player.updateFromServer(event.position!.X, event.position!.Y, this.player.radius, this.player.color, this.player.skin);
     } else if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;
-      player.updateFromServer(event.position!.X, event.position!.Y, player.radius, player.color, player.skin);
+      player.lerpMove(event.position!.X, event.position!.Y)
     }
   }
 
@@ -244,7 +244,7 @@ export class NetworkManager {
     const playerID = hashID(event.playerID);
     if (this.isCurrentPlayer(playerID)) {
       // we are dead
-      window.location.href = '/dead'
+      window.location.href = '/'
     }
     if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;
