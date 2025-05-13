@@ -304,9 +304,20 @@ async function connectToServer(world: Container, player: Player, gameId?: number
           }
         })
 
+        // Ordenar jugadores por tamaño (el más pequeño primero)
+        const allPlayers = [player, ...network.players.values()].filter(p => !p.destroyed);
+        allPlayers.sort((a, b) => a.radius - b.radius);
+
+        // Reordenar los jugadores en el mundo según su tamaño
+        allPlayers.forEach(p => {
+        // Remover y volver a añadir para actualizar el orden
+            if (p.parent) {
+                p.parent.removeChild(p);
+            }
+            world.addChild(p);
+        });
 
         // Actualizar clasificación
-        const allPlayers = [player, ...network.players.values()].filter(p => !p.destroyed);
         const sortedPlayers = allPlayers
             .sort((a, b) => b.radius - a.radius)
             .slice(0, 5);
