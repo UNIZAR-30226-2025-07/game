@@ -7,6 +7,7 @@ export class Player extends Container {
   public color: number;
   public skin: string;
   public pos: { x: number; y: number };
+  private serverPos: { x: number; y: number } | undefined;
   private worldBounds: WorldBounds;
   public skinSprite: Sprite | null = null;
   private graphics: Graphics;
@@ -107,7 +108,7 @@ export class Player extends Container {
     this.graphics.drawCircle(0, 0, this.radius);
     this.graphics.endFill();
 
-    if(this.skinSprite) {
+    if (this.skinSprite) {
       this.skinSprite.scale.set(this.radius / 250, this.radius / 250); // Ajustar el tamaño de la skin según el radio
       this.skinSprite.position.set(0, 0); // Asegurarse de que la skin esté centrada
     }
@@ -115,7 +116,7 @@ export class Player extends Container {
     // // Actualizar posición del nombre según el tamaño del jugador
     this.nameText.position.set(0, this.radius + 70);
 
-    
+
     // // Ajustar el tamaño de la fuente según el radio del jugador
     this.nameText.style.fontSize = Math.min(750, Math.min(this.radius / 3, 50));
   }
@@ -214,8 +215,17 @@ export class Player extends Container {
     );
   }
 
-  public moveTowards(screen: Rectangle, x: number, y: number) {
-    if (this.destroyed) return;
+  private calculateServerPositionDelta(): number {
+    if (this.serverPos === undefined) return 999999;
+    // console.log(this.pos, this.serverPos)
+    const dx = this.pos.x - this.serverPos.x;
+    const dy = this.pos.y - this.serverPos.y;
+    const delta =  Math.sqrt(dx * dx + dy * dy);
+    return delta
+  }
+
+  public moveTowards(screen: Rectangle, x: number, y: number): boolean {
+    if (this.destroyed) return false;
     const dx = x - screen.width / 2;
     const dy = y - screen.height / 2;
     const delta = Math.sqrt(dx * dx + dy * dy);
@@ -227,21 +237,29 @@ export class Player extends Container {
     const boost = Math.min((effectiveRadius - 80) / 300, 0.4); // hasta +40% si radius ≥ 200
     const velocity = (normalizedDistance * this.velocityMagnitude) * (1 + boost) / Math.pow(effectiveRadius / 80, 0.3);
 
+    // if cursor is really near the ball, don't move
+    if (delta < 40) return false;
 
-    // Don't move if the distance is minimal
-    if (delta > 3) {
-      this.pos.x += (dx / delta) * velocity;
-      this.pos.y += (dy / delta) * velocity;
+    this.pos.x += (dx / delta) * velocity;
+    this.pos.y += (dy / delta) * velocity;
 
-      // Bound checking
-      this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
-      this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
+    // Bound checking
+    this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
+    this.pos.y = Math.max(0, Math.min(this.pos.y, this.worldBounds.height))
 
-      // Actualizar la posición del contenedor completo
-      this.position.set(this.pos.x, this.pos.y);
+    // Actualizar la posición del contenedor completo
+    this.position.set(this.pos.x, this.pos.y);
 
-      this.draw();
-    }
+    this.draw();
+    // Don't send the move if the distance is minimal
+    const serverDelta = this.calculateServerPositionDelta();
+    if (serverDelta > 25) {
+      console.log("updating position")
+      this.serverPos = {x: this.pos.x, y: this.pos.y}
+      return true;
+    };
+
+    return false;
   }
 }
 
