@@ -169,6 +169,7 @@ export class NetworkManager {
   private handleJoin(event: Galaxy.JoinEvent) {
     console.log("registering me", event)
     this.player.id = event.playerID;
+    this.player.lerpMove(event.position!.X, event.position!.Y)
     this.player.updateFromServer(event.position!.X, event.position!.Y, event.radius, event.color, event.skin)
     this.joined = true;
     return
@@ -241,16 +242,17 @@ export class NetworkManager {
 
   private handleDestroyPlayer(event: Galaxy.DestroyPlayerEvent) {
     const playerID = hashID(event.playerID);
-    console.log("player dead: ", playerID)
+    console.log("player dead: ", event.playerID)
     if (this.isCurrentPlayer(playerID)) {
       // we are dead
       console.log("dying...")
       this.player.destroy();
+      return
     }
     if (this.players.has(playerID)) {
-      const player = this.players.get(playerID)!;
-      player.destroy();
+      const p = this.players.get(playerID)!;
       this.players.delete(playerID);
+      p.destroy();
     }
   }
 

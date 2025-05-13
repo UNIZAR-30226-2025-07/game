@@ -132,7 +132,7 @@ export class Player extends Container {
       y: y
     }
 
-    if (this.calculateServerPositionDelta() > 8000) {
+    if (this.calculateServerPositionDelta() > 2000) {
       // we are too far away, update
       console.log("teleporting to serverPos")
       this.pos = {
@@ -214,7 +214,7 @@ export class Player extends Container {
     const distanceSquared = dx * dx + dy * dy;
     const radiusSquared = this.radius * this.radius;
 
-    return distanceSquared < radiusSquared;
+    return distanceSquared < radiusSquared && this.radius > player.radius;
   }
 
   // TODO: optimize me
