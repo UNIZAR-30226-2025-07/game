@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text  } from "pixi.js";
+import { Application, Container, Graphics, Text } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -89,25 +89,25 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
     // Crear el texto de ayuda para pausar
     const pauseHelpText = new Text("Pulsa P para pausar la partida", {
-        fontSize: 16,
-        fill: 0xffffff,
-        fontWeight: 'bold',
-        stroke: 0x000000,
+      fontSize: 16,
+      fill: 0xffffff,
+      fontWeight: 'bold',
+      stroke: 0x000000,
     });
-    
+
     // Posicionar el texto en la esquina superior derecha
     pauseHelpText.anchor.set(1, 0); // Ancla en la esquina superior derecha
     pauseHelpText.position.set(
-        app.screen.width - 30, // 10 píxeles desde el borde derecho
-        30 // 10 píxeles desde el borde superior
+      app.screen.width - 30, // 10 píxeles desde el borde derecho
+      30 // 10 píxeles desde el borde superior
     );
 
     // Mantener el texto en la posición correcta cuando se redimensione la ventana
     app.renderer.on('resize', () => {
-        pauseHelpText.position.set(
-            app.screen.width - 10,
-            10
-        );
+      pauseHelpText.position.set(
+        app.screen.width - 10,
+        10
+      );
     });
 
     // Añadir el texto directamente al stage (no al world)
@@ -118,12 +118,12 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     const starContainer = new Container();
     app.stage.addChild(world);
     // Con esto conseguimos que queden por debajo de la vista del resto de los objetos
-    world.addChildAt(starContainer, 0); 
+    world.addChildAt(starContainer, 0);
 
-     // Generar estrellas en el fondo
-     generateStars(starContainer, 400, WORLD_SIZE); // Genera 400 estrellas
+    // Generar estrellas en el fondo
+    generateStars(starContainer, 400, WORLD_SIZE); // Genera 400 estrellas
 
-    
+
     // 3. Debug visual del área de juego
     const worldBounds = new Graphics()
       .rect(0, 0, WORLD_SIZE.width, WORLD_SIZE.height)
@@ -133,9 +133,12 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     const playerContainer = new Container();
 
     // Obtener nombre de usuario y skin desde cookies
-    const username = getCookie("username") ?? "Desconocido";
+    let username = getCookie("username") ?? "Guest";
+    if (username === "") {
+      username = "Guest"
+    }
     const skin = getCookie("skin") ?? "Aspecto Básico.png";
-    const playerIDcookie = getCookie("PlayerID"); 
+    const playerIDcookie = getCookie("PlayerID");
     const leaderID = getCookie("LeaderID");
     const gameIdStr = getCookie("gameId");
     const gameId = gameIdStr ? parseInt(gameIdStr, 10) : undefined;
@@ -150,8 +153,8 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     }
     // Validar que gameId sea un número válido si existe
     if (gameIdStr && isNaN(gameId!)) {
-        console.log("Error: gameId no es un número válido:", gameIdStr);
-        return;
+      console.log("Error: gameId no es un número válido:", gameIdStr);
+      return;
     }
 
 
@@ -190,8 +193,9 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
         // Solo enviar movimiento si está conectado
         if (network.isConnected()) {
-          player.moveTowards(app.screen, pointer.x, pointer.y);
-          network.sendMovement(player.pos.x, player.pos.y);
+          if (player.moveTowards(app.screen, pointer.x, pointer.y)) {
+            network.sendMovement(player.pos.x, player.pos.y);
+          };
         }
 
         network.foods.forEach(f => {
@@ -230,20 +234,20 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         );
 
       } catch (error) {
-        console.error("Error en game loop:", error);
+        console.log("Error en game loop:", error);
       }
     });
 
     // Añadir event listener para la tecla P
     window.addEventListener('keydown', (event) => {
-        if (event.key.toLowerCase() === 'p') {
-          if (network.isConnected()) {
-            network.sendPause();
-            console.log("🎮 Enviando evento de pausa al servidor");
-          }
-        } 
-      });
-     
+      if (event.key.toLowerCase() === 'p') {
+        if (network.isConnected()) {
+          network.sendPause();
+          console.log("🎮 Enviando evento de pausa al servidor");
+        }
+      }
+    });
+
 
     // 7. Manejo mejorado de cierre
     window.addEventListener('beforeunload', () => {
@@ -262,36 +266,36 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 // Con esto conseguimos que tengan forma de estrella y no de círculo
 // distinguiendo de esta manera las estrellas del fondo con la comida de los jugadores
 function drawStar(graphics: Graphics, x: number, y: number, radius: number, points: number, innerRadius: number, color: number) {
-    const step = Math.PI / points;
-    graphics.beginFill(color);
+  const step = Math.PI / points;
+  graphics.beginFill(color);
 
-    graphics.moveTo(x + radius, y);
-    for (let i = 0; i < 2 * points; i++) {
-        const angle = i * step;
-        const r = i % 2 === 0 ? radius : innerRadius;
-        graphics.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
-    }
-    graphics.closePath();
-    graphics.endFill();
+  graphics.moveTo(x + radius, y);
+  for (let i = 0; i < 2 * points; i++) {
+    const angle = i * step;
+    const r = i % 2 === 0 ? radius : innerRadius;
+    graphics.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+  }
+  graphics.closePath();
+  graphics.endFill();
 }
 
 // Función que genera las estrellas de fondo
 // Las generamos de manera aleatoria y las añadimos al contenedor de estrellas
 function generateStars(container: Container, numStars: number, worldSize: { width: number; height: number }) {
-    for (let i = 0; i < numStars; i++) {
-        const star = new Graphics();
-        const x = Math.random() * worldSize.width;
-        const y = Math.random() * worldSize.height;
-        const radius = Math.random() * 5 + 3; // Tamaño aleatorio entre 3 y 8
-        const innerRadius = radius / 2; // Radio interno más pequeño
-        const points = 5; // Número de puntas de la estrella
-        const color = 0xffffff; // Color blanco para las estrellas
+  for (let i = 0; i < numStars; i++) {
+    const star = new Graphics();
+    const x = Math.random() * worldSize.width;
+    const y = Math.random() * worldSize.height;
+    const radius = Math.random() * 5 + 3; // Tamaño aleatorio entre 3 y 8
+    const innerRadius = radius / 2; // Radio interno más pequeño
+    const points = 5; // Número de puntas de la estrella
+    const color = 0xffffff; // Color blanco para las estrellas
 
-        drawStar(star, 0, 0, radius, points, innerRadius, color);
+    drawStar(star, 0, 0, radius, points, innerRadius, color);
 
-        star.position.set(x, y);
-        container.addChild(star);
-    }
+    star.position.set(x, y);
+    container.addChild(star);
+  }
 }
 
 function lerp(start: number, end: number, t: number): number {
