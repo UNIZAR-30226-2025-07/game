@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Application, Container, Graphics, Text } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -259,7 +259,7 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
 
         // Actualizar clasificación
-        const allPlayers = [player, ...network.players].filter(p => !p.destroyed);
+        const allPlayers = [player, ...network.players.values()].filter(p => !p.destroyed);
         const sortedPlayers = allPlayers
             .sort((a, b) => b.radius - a.radius)
             .slice(0, 5);
