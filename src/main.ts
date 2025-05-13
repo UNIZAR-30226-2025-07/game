@@ -195,6 +195,7 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
 
     const world = new Container();
+    world.sortableChildren = true; // Habilitar ordenamiento automático por zIndex
     // Para crear las estrellas del fondo
     const starContainer = new Container();
     app.stage.addChild(world);
@@ -309,13 +310,9 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         const allPlayers = [player, ...network.players.values()].filter(p => !p.destroyed);
         allPlayers.sort((a, b) => a.radius - b.radius);
 
-        // Reordenar los jugadores en el mundo según su tamaño
+        // Actualizar zIndex basado en el radio (mayor radio = mayor zIndex)
         allPlayers.forEach(p => {
-        // Remover y volver a añadir para actualizar el orden
-            if (p.parent) {
-                p.parent.removeChild(p);
-            }
-            world.addChild(p);
+            p.zIndex = p.radius;
         });
 
         // Actualizar clasificación
