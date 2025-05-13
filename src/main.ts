@@ -135,6 +135,47 @@ async function connectToServer(world: Container, player: Player, gameId?: number
       30 // 10 píxeles desde el borde superior
     );
 
+    // Crear el minimapa
+    const minimapSize = 150;
+    const minimapContainer = new Container();
+    
+    // Crear fondo cuadrado
+    const minimapBg = new Graphics()
+        .beginFill(0x000000, 0.5)
+        .lineStyle(2, 0xffffff, 0.5)
+        .drawRect(0, 0, minimapSize, minimapSize)
+        .endFill();
+
+    // Crear borde cuadrado
+    const minimapBorder = new Graphics()
+        .lineStyle(2, 0xffffff, 0.5)
+        .drawRect(0, 0, minimapSize, minimapSize);
+
+    // Contenedor para los puntos de los jugadores en el minimapa
+    const minimapPlayers = new Container();
+
+    // Crear máscara cuadrada para el contenedor de jugadores
+    const minimapMask = new Graphics()
+        .beginFill(0xffffff)
+        .drawRect(0, 0, minimapSize, minimapSize)
+        .endFill();
+    
+    minimapPlayers.mask = minimapMask;
+
+    // Añadir elementos al contenedor del minimapa
+    minimapContainer.addChild(minimapBg);
+    minimapContainer.addChild(minimapBorder);
+    minimapContainer.addChild(minimapPlayers);
+    minimapContainer.addChild(minimapMask);
+
+    // Posicionar el minimapa en la esquina inferior derecha
+    minimapContainer.position.set(
+        app.screen.width - minimapSize - 10,
+        app.screen.height - minimapSize - 10
+    );
+    // Añadir el minimapa al stage
+    app.stage.addChild(minimapContainer);
+
     // Mantener el texto en la posición correcta cuando se redimensione la ventana
     app.renderer.on('resize', () => {
       pauseHelpText.position.set(
@@ -144,6 +185,12 @@ async function connectToServer(world: Container, player: Player, gameId?: number
 
       // Mantener el leaderboard en la esquina superior izquierda
         leaderboardContainer.position.set(10, 10);
+
+      minimapContainer.position.set(
+            app.screen.width - minimapSize - 10,
+            app.screen.height - minimapSize - 10
+        );
+
     });
 
 
@@ -275,6 +322,38 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         // Limpiar los textos restantes
         for (let i = sortedPlayers.length; i < 5; i++) {
             playerScores[i].text = "";
+        }
+
+        // Actualizar minimapa
+        minimapPlayers.removeChildren();
+
+        // Factor de escala para el minimapa
+        const minimapScale = minimapSize / WORLD_SIZE.width;
+
+        // Dibujar jugador principal
+        const playerDot = new Graphics()
+            .beginFill(0x00ff00)
+            .drawCircle(0, 0, 3)
+            .endFill();
+        playerDot.position.set(
+            player.pos.x * minimapScale,
+            player.pos.y * minimapScale
+        );
+        minimapPlayers.addChild(playerDot);
+
+        // Dibujar otros jugadores
+        for (const p of network.players.values()) {
+            if (!p.destroyed) {
+                const otherPlayerDot = new Graphics()
+                    .beginFill(0xff0000)
+                    .drawCircle(0, 0, 3)
+                    .endFill();
+                otherPlayerDot.position.set(
+                    p.pos.x * minimapScale,
+                    p.pos.y * minimapScale
+                );
+                minimapPlayers.addChild(otherPlayerDot);
+            }
         }
 
         // Suavizado de cámara
