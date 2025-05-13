@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text } from "pixi.js";
+import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
 import { Player } from "./player";
 import { NetworkManager } from "../websockets/NetworkManager";
 import './style.css';
@@ -87,6 +87,39 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     await app.init({ background: '#000000', resizeTo: window });
     document.body.appendChild(app.canvas);
 
+    // Crear el panel de clasificación
+    const leaderboardContainer = new Container();
+    const leaderboardBg = new Graphics()
+        .beginFill(0x000000, 0.5)
+        .drawRoundedRect(0, 0, 200, 150, 10)
+        .endFill();
+
+    const leaderboardTitle = new Text("TOP 5 JUGADORES", {
+        fontSize: 16,
+        fill: 0xffffff,
+        fontWeight: 'bold'
+    });
+    leaderboardTitle.position.set(10, 5);
+
+    // Array para los textos de los jugadores
+    const playerScores: Text[] = [];
+    for (let i = 0; i < 5; i++) {
+        const scoreText = new Text("", {
+            fontSize: 14,
+            fill: 0xffffff
+        });
+        scoreText.position.set(10, 30 + i * 23);
+        playerScores.push(scoreText);
+        leaderboardContainer.addChild(scoreText);
+    }
+
+    leaderboardContainer.addChildAt(leaderboardBg, 0);
+    leaderboardContainer.addChild(leaderboardTitle);
+    leaderboardContainer.position.set(10, 10);
+
+    // Añadir el leaderboard al stage
+    app.stage.addChild(leaderboardContainer);
+
     // Crear el texto de ayuda para pausar
     const pauseHelpText = new Text("Pulsa P para pausar la partida", {
       fontSize: 16,
@@ -108,6 +141,9 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         app.screen.width - 10,
         10
       );
+
+      // Mantener el leaderboard en la esquina superior izquierda
+        leaderboardContainer.position.set(10, 10);
     });
 
     // Añadir el texto directamente al stage (no al world)
@@ -214,6 +250,26 @@ async function connectToServer(world: Container, player: Player, gameId?: number
             p.destroy()
           }
         })
+
+
+        // Actualizar clasificación
+        const allPlayers = [player, ...network.players].filter(p => !p.destroyed);
+        const sortedPlayers = allPlayers
+            .sort((a, b) => b.radius - a.radius)
+            .slice(0, 5);
+
+        // Actualizar los textos de la clasificación
+        sortedPlayers.forEach((p, index) => {
+            const score = Math.floor(p.radius * 100);
+            const isCurrentPlayer = p === player;
+            playerScores[index].text = `${index + 1}. ${p.username}: ${score}`;
+            playerScores[index].style.fill = isCurrentPlayer ? 0x00ff00 : 0xffffff;
+        });
+
+        // Limpiar los textos restantes
+        for (let i = sortedPlayers.length; i < 5; i++) {
+            playerScores[i].text = "";
+        }
 
         // Suavizado de cámara
         let zoom = 1;
