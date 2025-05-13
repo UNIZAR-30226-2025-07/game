@@ -255,7 +255,6 @@ async function connectToServer(world: Container, player: Player, gameId?: number
               player.eatPlayer(p);
               network.sendEatPlayer(p.id, player.radius)
             }
-            p.destroy()
           }
         })
 
