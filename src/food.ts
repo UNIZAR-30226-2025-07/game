@@ -1,5 +1,5 @@
 import { Graphics } from "pixi.js";
-import { NewFoodEvent, Vector2D } from "../proto/galaxy";
+import { NewFoodEvent } from "../proto/galaxy";
 
 export const FOOD_RADIUS = 20;
 
