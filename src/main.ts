@@ -110,8 +110,6 @@ async function connectToServer(world: Container, player: Player, gameId?: number
       );
     });
 
-    // Añadir el texto directamente al stage (no al world)
-    app.stage.addChild(pauseHelpText);
 
     const world = new Container();
     // Para crear las estrellas del fondo
@@ -157,9 +155,12 @@ async function connectToServer(world: Container, player: Player, gameId?: number
       return;
     }
 
-
     // Determinar si es una partida privada y si el jugador es líder
     const isLeader = playerIDcookie === leaderID;
+
+    if (gameId && isLeader) {
+      app.stage.addChild(pauseHelpText);
+    }
 
     console.log("Nombre leído desde cookie:", username);
     console.log("PlayerID leído desde cookie:", playerID);
