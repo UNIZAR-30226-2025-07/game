@@ -206,12 +206,11 @@ export class NetworkManager {
   }
 
   private handleNewFood(event: Galaxy.NewFoodEvent) {
-    const food = createFoodFromServer({
-      position: { X: event.position!.X, Y: event.position!.Y },
-      color: event.color
-    });
-    this.foods.push(food);
-    this.world.addChild(food);
+    for (const protoFood of event.food) {
+      const food = createFoodFromServer(protoFood);
+      this.foods.push(food);
+      this.world.addChild(food);
+    }
   }
 
   private handlePlayerGrow(event: Galaxy.PlayerGrowEvent) {
@@ -219,7 +218,7 @@ export class NetworkManager {
     if (this.isCurrentPlayer(playerID)) {
       this.player.updateRadiusFromServer(event.radius);
     } else if (this.players.has(playerID)) {
-      this.players.get(playerID)?.updateRadiusFromServer(event.radius);
+      this.players.get(playerID)!.updateRadiusFromServer(event.radius);
     } else {
       console.log("nobody", event, this.players, this.player)
     }
@@ -242,9 +241,11 @@ export class NetworkManager {
 
   private handleDestroyPlayer(event: Galaxy.DestroyPlayerEvent) {
     const playerID = hashID(event.playerID);
+    console.log("player dead: ", playerID)
     if (this.isCurrentPlayer(playerID)) {
       // we are dead
-      window.location.href = '/'
+      console.log("dying...")
+      this.player.destroy();
     }
     if (this.players.has(playerID)) {
       const player = this.players.get(playerID)!;

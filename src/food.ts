@@ -1,5 +1,5 @@
 import { Graphics } from "pixi.js";
-import { NewFoodEvent } from "../proto/galaxy";
+import { Food as ProtoFood } from "../proto/galaxy";
 
 export const FOOD_RADIUS = 20;
 
@@ -21,7 +21,7 @@ export class Food extends Graphics {
 }
 
 // Nueva función para crear comida desde eventos del servidor
-export function createFoodFromServer(event: NewFoodEvent): Food {
+export function createFoodFromServer(event: ProtoFood): Food {
   const defaultPos = { X: 0, Y: 0 };
   const pos = event.position ?? defaultPos;
   

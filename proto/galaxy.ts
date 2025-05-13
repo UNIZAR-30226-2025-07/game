@@ -181,9 +181,13 @@ export interface JoinEvent {
   skin: string;
 }
 
-export interface NewFoodEvent {
+export interface Food {
   position: Vector2D | undefined;
   color: number;
+}
+
+export interface NewFoodEvent {
+  food: Food[];
 }
 
 export interface PlayerMoveEvent {
@@ -805,12 +809,12 @@ export const JoinEvent: MessageFns<JoinEvent> = {
   },
 };
 
-function createBaseNewFoodEvent(): NewFoodEvent {
+function createBaseFood(): Food {
   return { position: undefined, color: 0 };
 }
 
-export const NewFoodEvent: MessageFns<NewFoodEvent> = {
-  encode(message: NewFoodEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const Food: MessageFns<Food> = {
+  encode(message: Food, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.position !== undefined) {
       Vector2D.encode(message.position, writer.uint32(10).fork()).join();
     }
@@ -820,10 +824,10 @@ export const NewFoodEvent: MessageFns<NewFoodEvent> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): NewFoodEvent {
+  decode(input: BinaryReader | Uint8Array, length?: number): Food {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseNewFoodEvent();
+    const message = createBaseFood();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -852,14 +856,14 @@ export const NewFoodEvent: MessageFns<NewFoodEvent> = {
     return message;
   },
 
-  fromJSON(object: any): NewFoodEvent {
+  fromJSON(object: any): Food {
     return {
       position: isSet(object.position) ? Vector2D.fromJSON(object.position) : undefined,
       color: isSet(object.color) ? globalThis.Number(object.color) : 0,
     };
   },
 
-  toJSON(message: NewFoodEvent): unknown {
+  toJSON(message: Food): unknown {
     const obj: any = {};
     if (message.position !== undefined) {
       obj.position = Vector2D.toJSON(message.position);
@@ -870,15 +874,73 @@ export const NewFoodEvent: MessageFns<NewFoodEvent> = {
     return obj;
   },
 
+  create<I extends Exact<DeepPartial<Food>, I>>(base?: I): Food {
+    return Food.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Food>, I>>(object: I): Food {
+    const message = createBaseFood();
+    message.position = (object.position !== undefined && object.position !== null)
+      ? Vector2D.fromPartial(object.position)
+      : undefined;
+    message.color = object.color ?? 0;
+    return message;
+  },
+};
+
+function createBaseNewFoodEvent(): NewFoodEvent {
+  return { food: [] };
+}
+
+export const NewFoodEvent: MessageFns<NewFoodEvent> = {
+  encode(message: NewFoodEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.food) {
+      Food.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): NewFoodEvent {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNewFoodEvent();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.food.push(Food.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): NewFoodEvent {
+    return { food: globalThis.Array.isArray(object?.food) ? object.food.map((e: any) => Food.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: NewFoodEvent): unknown {
+    const obj: any = {};
+    if (message.food?.length) {
+      obj.food = message.food.map((e) => Food.toJSON(e));
+    }
+    return obj;
+  },
+
   create<I extends Exact<DeepPartial<NewFoodEvent>, I>>(base?: I): NewFoodEvent {
     return NewFoodEvent.fromPartial(base ?? ({} as any));
   },
   fromPartial<I extends Exact<DeepPartial<NewFoodEvent>, I>>(object: I): NewFoodEvent {
     const message = createBaseNewFoodEvent();
-    message.position = (object.position !== undefined && object.position !== null)
-      ? Vector2D.fromPartial(object.position)
-      : undefined;
-    message.color = object.color ?? 0;
+    message.food = object.food?.map((e) => Food.fromPartial(e)) || [];
     return message;
   },
 };

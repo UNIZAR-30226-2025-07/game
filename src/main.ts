@@ -190,6 +190,11 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     // 6. Game loop con protección
     app.ticker.add(() => {
       try {
+        if (player.destroyed) {
+          window.location.href = '/';
+          return
+        }
+
         const pointer = app.renderer.events.pointer;
 
         // Solo enviar movimiento si está conectado
@@ -209,8 +214,8 @@ async function connectToServer(world: Container, player: Player, gameId?: number
         network.players.forEach(p => {
           if (player.canEatPlayer(p)) {
             if (p.id !== undefined) {
-              network.sendEatPlayer(p.id, player.radius)
               player.eatPlayer(p);
+              network.sendEatPlayer(p.id, player.radius)
             }
             p.destroy()
           }
