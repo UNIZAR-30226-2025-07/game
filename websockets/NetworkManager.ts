@@ -257,7 +257,7 @@ export class NetworkManager {
   }
 
   private handlePause() {
-    window.location.href = '/paused'
+    window.location.href = '/pause'
   }
 
   private isCurrentPlayer(playerId: IDHash): boolean {
