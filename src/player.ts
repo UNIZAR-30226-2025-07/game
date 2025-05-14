@@ -270,8 +270,15 @@ export class Player extends Container {
     // if cursor is really near the ball, don't move
     if (delta < 40) return false;
 
-    this.pos.x += (dx / delta) * velocity;
-    this.pos.y += (dy / delta) * velocity;
+    const MAX_VELOCITY = 3.5;
+
+    const xMov = (dx / delta) * velocity;
+    const yMov = (dy / delta) * velocity;
+    this.pos.x += Math.max(-MAX_VELOCITY, Math.min(xMov, MAX_VELOCITY));
+    this.pos.y += Math.max(-MAX_VELOCITY, Math.min(yMov, MAX_VELOCITY));
+
+    // this.pos.x += xMov
+    // this.pos.y += yMov
 
     // Bound checking
     this.pos.x = Math.max(0, Math.min(this.pos.x, this.worldBounds.width))
