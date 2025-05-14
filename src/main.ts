@@ -275,7 +275,11 @@ async function connectToServer(world: Container, player: Player, gameId?: number
     app.ticker.add(() => {
       try {
         if (player.destroyed) {
-          window.location.href = '/gameOver';
+          if (gameId) {
+            window.location.reload();
+          } else {
+            window.location.href = '/gameOver';
+          }
           return
         }
 
